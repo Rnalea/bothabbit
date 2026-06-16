@@ -593,7 +593,7 @@
         // Sesuai request, bahan penampung task (inventory) dan status misi disapu bersih saat reload/refresh
         localStorage.removeItem('fishing_inventory');
         localStorage.removeItem('cleared_tasks');
-
+        localStorage.removeItem('total_catch_history');
         let validCode = "2026"; 
         let activeTasks = [];  
         let catchPool = [];    
@@ -806,16 +806,22 @@
             });
         }
 
-        // --- RENDER PAPAN HISTORY MUTLAK ---
+        // --- RENDER PAPAN HISTORY SELEKTIF (HANYA MUNCUL JIKA SUDAH PERNAH DIDAPAT) ---
         function renderHistoryBoard() {
             taskListContainer.innerHTML = "";
             const entries = Object.entries(totalCatchHistory);
-            if (entries.length === 0) {
+    
+            // Saring data: hanya ambil yang jumlahnya lebih besar dari 0
+            const earnedEntries = entries.filter(([fishName, count]) => count > 0);
+
+            // Jika setelah disaring ternyata kosong (belum dapat ikan apa-apa)
+            if (earnedEntries.length === 0) {
                 taskListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Belum ada data tangkapan.</p>";
                 return;
             }
 
-            entries.forEach(([fishName, count]) => {
+            // Hanya buat elemen HTML untuk ikan yang count-nya > 0
+            earnedEntries.forEach(([fishName, count]) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.classList.add('task-item');
                 itemDiv.style.padding = "12px 15px";
