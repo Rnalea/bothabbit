@@ -1,4 +1,12 @@
-// Letakkan ini di bagian atas <script> bersama dengan pembersihan task lainnya
-localStorage.removeItem('fishing_inventory');
-localStorage.removeItem('cleared_tasks');
-localStorage.removeItem('total_catch_history'); // <--- TAMBAHKAN BARIS INI UNTUK RESET TOTAL HISTORY
+<script>
+    // Letakkan ini di bagian atas <script> bersama dengan pembersihan task lainnya
+    localStorage.removeItem('fishing_inventory'); // <--- TAMBAHKAN BARIS INI UNTUK RESET BAHAN PENAMPUNG TASK (INVENTORY)
+    localStorage.removeItem('cleared_tasks'); // <--- TAMBAHKAN BARIS INI UNTUK RESET STATUS MISI
+    localStorage.removeItem('total_catch_history'); // <--- TAMBAHKAN BARIS INI UNTUK RESET TOTAL HISTORY
+
+//Code berikutnya...
+    let validCode = "2026"; 
+    let activeTasks = [];  
+    let catchPool = [];    
+    let inventory = {};    // Selalu kosong (mulai dari 0) setiap kali fresh reload
+    let totalCatchHistory = {};    // Database History tangkapan mutlak dipertahankan, tidak di-remove
