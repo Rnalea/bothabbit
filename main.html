@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemancingan Hati X BUBU v2</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #74b9ff, #a29bfe);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        h1 {
+            color: white;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        /* --- PAPAN SAMBUTAN UTAMA (WELCOME SCREEN) --- */
+        .welcome-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1e272e, #0a3d62);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            transition: opacity 0.5s ease;
+        }
+        .welcome-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 25px;
+            text-align: center;
+            width: 350px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 3px solid #f6b93b;
+        }
+        .welcome-box h2 { color: #0a3d62; margin-bottom: 10px; font-size: 1.8rem; }
+        .welcome-box p { color: #57606f; margin-bottom: 20px; font-weight: 500; }
+        .welcome-box input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #ced6e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .welcome-box input:focus { border-color: #ff9f43; }
+        
+        .btn-start-game {
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background-color: #2ed573;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        /* Area Game */
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            height: 65vh;
+            margin-top: 20px;
+            background: linear-gradient(to bottom, #fa983a, #f6b93b);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Langit & Dermaga */
+        .sky {
+            height: 50%;
+            background: linear-gradient(to bottom, #81ecec, #ffeaa7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- AWAN ASIMETRIS NATURAL --- */
+        .cloud-layer {
+            position: absolute;
+            width: 200%;
+            height: 50px;
+            transform-origin: left top;
+        }
+        .cloud1 {
+            top: 5px;
+            opacity: 0.35;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,80 Q90,20 180,70 T380,40 T600,80 T810,30 T1020,70 T1200,50 V120 H0 Z" fill="%23b2bec3"/></svg>') repeat-x;
+            background-size: 50% 50px;
+            animation: moveClouds 35s linear infinite;
+        }
+        .cloud2 {
+            top: 20px;
+            opacity: 0.2;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,90 Q120,40 240,80 T500,30 T750,90 T980,40 T1200,85 V120 H0 Z" fill="%23b2bec3"/></svg>') repeat-x;
+            background-size: 40% 45px;
+            animation: moveClouds 55s linear infinite;
+        }
+        @keyframes moveClouds {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+
+        /* --- CONTAINER BIRD GIF --- */
+        .bird-gif {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            z-index: 4;
+            pointer-events: none;
+            object-fit: contain;
+        }
+
+        /* Alas / Dataran */
+        .pier {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 85px;
+            height: 35px;
+            background-color: #4a4a4a;
+            border-top-right-radius: 5px;
+            z-index: 5;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.2);
+        }
+
+        /* GIF Karakter Pemancing */
+        .fisherman-gif {
+            position: absolute;
+            bottom: 25px;
+            left: 5px;
+            width: 65px;
+            height: 65px;
+            z-index: 6;
+            pointer-events: none;
+            transform: scaleX(-1);
+        }
+
+        /* Joran Pancing */
+        .rod {
+            position: absolute;
+            bottom: 45px;
+            left: 55px;
+            width: 110px;
+            height: 5px;
+            background-color: #2f3542;
+            transform-origin: bottom left;
+            transform: rotate(-35deg);
+            z-index: 12;
+            transition: transform 0.1s linear;
+        }
+
+        /* Tali Pancing */
+        .line {
+            position: absolute;
+            top: 2px;
+            left: 110px;
+            width: 1.5px;
+            height: 0px;
+            background-color: rgba(255, 255, 255, 0.8);
+            transform-origin: top left;
+            z-index: 15;
+        }
+
+        /* Pelampung */
+        .bobber {
+            position: absolute;
+            bottom: 0px;
+            left: -5px;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle at 50% 30%, #ff4757 50%, #ffffff 50%);
+            border-radius: 50%;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 16;
+        }
+
+        .rod.windup { transform: rotate(-85deg) !important; transition: transform 0.4s ease-out; }
+        .rod.cast-action { transform: rotate(-25deg) !important; transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        .bobber.bite { animation: bobberBite 0.4s infinite alternate; }
+        @keyframes bobberBite {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(12px); opacity: 0.7; }
+        }
+
+        /* --- TOTAL 6 LAYER OMBAK LAUT --- */
+        .sea {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: #0652dd;
+            z-index: 10;
+        }
+        .wave-svg {
+            position: absolute;
+            left: 0; width: 200%; height: 30px;
+            background-repeat: repeat-x;
+        }
+        .wave-top {
+            top: -15px; z-index: 11;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,120V73.71c47.79-22.2,103.59-32.17,158-28,70.36,5.37,136.33,33.31,206.8,37.5C438.64,87.57,512.34,66.33,583,47.95c69.27-18,138.3-24.88,209.4-13.08,36.15,6,69.85,17.84,104.45,29.34C989.49,95,1113,134.29,1200,77.6V120Z" fill="%230652dd"/></svg>');
+            background-size: 50% 30px;
+            animation: waveMoveLeft 4s linear infinite;
+        }
+        .wave-white-1 {
+            top: 15px; z-index: 12;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q150,0 300,30 T600,30 T900,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.35"/></svg>');
+            background-size: 40% 20px;
+            animation: waveMoveLeft 3s linear infinite;
+        }
+        .wave-white-2 {
+            top: 45px; z-index: 13;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q150,0 300,30 T600,30 T900,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.2"/></svg>');
+            background-size: 25% 15px;
+            animation: waveMoveLeft 5s linear infinite;
+        }
+        .wave-sub-1 {
+            top: 75px; z-index: 14;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q120,5 240,30 T480,30 T720,30 T960,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.15"/></svg>');
+            background-size: 30% 18px;
+            animation: waveMoveLeft 6s linear infinite;
+        }
+        .wave-sub-2 {
+            top: 110px; z-index: 15;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,25 Q140,0 280,25 T560,25 T840,25 T1120,25 T1200,25 V60 H0 Z" fill="%23ffffff" opacity="0.12"/></svg>');
+            background-size: 35% 16px;
+            animation: waveMoveLeft 7s linear infinite;
+        }
+        .wave-sub-3 {
+            top: 145px; z-index: 16;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q160,10 320,30 T640,30 T960,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.08"/></svg>');
+            background-size: 45% 14px;
+            animation: waveMoveLeft 8s linear infinite;
+        }
+        @keyframes waveMoveLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- ANIMASI COUNTDOWN DETIK BESAR --- */
+        .countdown-text {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            font-size: 5.5rem;
+            font-weight: 900;
+            color: #ff3838;
+            text-shadow: 3px 3px 0px #ffffff, 0 0 20px rgba(255, 56, 56, 0.8);
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .countdown-animate {
+            animation: popFade 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popFade {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
+        /* --- TENSION STRUGGLE BAR --- */
+        .tension-container {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 22px;
+            background-color: rgba(47, 53, 66, 0.85);
+            border: 2px solid #ffffff;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 40;
+            display: none;
+        }
+        .tension-bar {
+            width: 30%;
+            height: 100%;
+            background: linear-gradient(to right, #fffa65, #ffaf40, #ff4d4d);
+            box-shadow: 0 0 12px #ff4d4d;
+            transition: width 0.1s cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        /* Efek Cipratan */
+        .splash-container {
+            position: absolute;
+            top: 50%; left: 0px; width: 1px; height: 1px; z-index: 20; display: none;
+        }
+        .drop { position: absolute; bottom: 0; left: -3px; width: 6px; height: 25px; background: linear-gradient(to top, #ffffff, #81ecec); border-radius: 50%; opacity: 0; }
+        .splash-active .drop { animation: splashAnim 0.7s ease-out forwards; }
+        .splash-active .drop:nth-child(1) { --dx: -50px; --dy: -120px; animation-delay: 0s; }
+        .splash-active .drop:nth-child(2) { --dx: -20px; --dy: -180px; animation-delay: 0.03s; }
+        .splash-active .drop:nth-child(3) { --dx: 0px; --dy: -210px; animation-delay: 0s; }
+        .splash-active .drop:nth-child(4) { --dx: 20px; --dy: -180px; animation-delay: 0.03s; }
+        .splash-active .drop:nth-child(5) { --dx: 50px; --dy: -120px; animation-delay: 0s; }
+        @keyframes splashAnim {
+            0% { transform: translate(0, 0) scaleY(1.5); opacity: 1; }
+            60% { opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scaleY(0.2); opacity: 0; }
+        }
+
+        /* Power Bar UI Lemparan */
+        .power-container {
+            width: 80%; max-width: 300px; height: 20px; background-color: #2f3542; border-radius: 10px; margin-top: 15px; overflow: hidden; border: 2px solid white; display: none;
+        }
+        .power-bar { width: 0%; height: 100%; background: linear-gradient(to right, #ffeaa7, #ff7675, #d63031); transition: width 0.05s linear; }
+
+        /* Area Kontrol Aksi Utama */
+        .controls-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            z-index: 10;
+        }
+
+        .btn-action {
+            padding: 15px 40px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #2ed573; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-action:disabled { background-color: #a4b0be; cursor: not-allowed; }
+        
+        /* ICON TASK BUTTON */
+        .btn-task-trigger {
+            background-color: #ffffff;
+            border: 2px solid #2f3542;
+            font-size: 1.6rem;
+            padding: 10px 14px;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .btn-task-trigger:hover { transform: scale(1.05); }
+
+        .status-text { color: white; margin-top: 10px; font-weight: bold; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+
+        /* Pop-up Modal Hasil Tangkapan */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background-color: white; padding: 35px 30px; border-radius: 20px; text-align: center; width: 340px; transform: scale(0.7); transition: transform 0.3s ease; display: flex; flex-direction: column; align-items: center;
+        }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        .modal-box h2 { margin-bottom: 10px; font-size: 1.8rem; }
+        .modal-box .catch-name { font-size: 1.5rem; font-weight: bold; color: #2f3542; margin-bottom: 8px; }
+        
+        /* HIGHLIGHT BOX UNTUK KOMENTAR IKAN */
+        .comment-highlight {
+            background-color: #e0e0e0;
+            color: #000000;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: inline-block;
+            width: 100%;
+        }
+        .btn-close { width: 100%; padding: 12px; background-color: #1e90ff; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+
+        /* --- PAPAN MENU TASK OVERLAY --- */
+        .task-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .task-overlay.show { opacity: 1; pointer-events: auto; }
+        .task-box {
+            background-color: #ffffff;
+            width: 360px;
+            max-height: 80vh;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f1f2f6;
+            padding-bottom: 10px;
+        }
+        .task-header h3 { font-size: 1.4rem; color: #2f3542; }
+        .btn-close-task {
+            background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #a4b0be;
+        }
+        .task-list-container {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 5px;
+        }
+        
+        /* Elemen Tiap Item Misi */
+        .task-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .task-item-title { font-weight: bold; font-size: 1.1rem; color: #2f3542; margin-bottom: 8px; }
+        .task-requirements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 1rem;
+            color: #57606f;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        /* Pengaturan Tombol Klaim / Ambil Link Misi */
+        .btn-task-claim {
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .btn-task-claim.disabled { background-color: #ced6e0; color: #a4b0be; cursor: not-allowed; }
+        .btn-task-claim.ready { background-color: #ff9f43; color: white; }
+        .btn-task-claim.get-link { background-color: #2ed573; color: white; }
+        .task-divider { border: 0; height: 1px; background: #e2e8f0; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2024/11/03/audio_b8a304356c.mp3" loop autoplay></audio>
+    
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-box">
+            <h2>Selamat datang di<br>Pemancingan Hati 🎣</h2>
+            <p>Masukkan kode rahasia untuk memulai:</p>
+            <input type="password" id="codeInputField" placeholder="Ketik Kode Di Sini..." maxlength="12">
+            <button class="btn-start-game" id="btnStartGame">MULAI GAME</button>
+        </div>
+    </div>
+
+    <h1>Mancing Bersama Bubu 🎣</h1>
+    
+    <div class="game-container" id="gameContainer">
+        <div class="countdown-text" id="countdownText">5</div>
+        <div class="tension-container" id="tensionContainer">
+            <div class="tension-bar" id="tensionBar"></div>
+        </div>
+
+        <div class="sky" id="skyArea">
+            <div class="cloud-layer cloud1"></div>
+            <div class="cloud-layer cloud2"></div>
+            <div class="pier"></div>
+            <img class="fisherman-gif" src="https://media.tenor.com/NT3q-SrjV6EAAAAi/mimibubu.gif" alt="Pemancing">
+            <div class="rod" id="rod">
+                <div class="line" id="line">
+                    <div class="bobber" id="bobber"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sea">
+            <div class="wave-svg wave-top"></div>
+            <div class="wave-svg wave-white-1"></div>
+            <div class="wave-svg wave-white-2"></div>
+            <div class="wave-svg wave-sub-1"></div>
+            <div class="wave-svg wave-sub-2"></div>
+            <div class="wave-svg wave-sub-3"></div>
+        </div>
+
+        <div class="splash-container" id="splashContainer">
+            <div class="drop"></div><div class="drop"></div><div class="drop"></div><div class="drop"></div><div class="drop"></div>
+        </div>
+    </div>
+
+    <div class="power-container" id="powerContainer">
+        <div class="power-bar" id="powerBar"></div>
+    </div>
+
+    <div class="status-text" id="statusText">Tahan tombol untuk mengisi tenaga lemparan!</div>
+    
+    <div class="controls-wrapper">
+        <button class="btn-action" id="btnAction">LEMPAR UMPAN</button>
+        <button class="btn-task-trigger" id="btnTaskTrigger" title="Daftar Misi">📋</button>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h2 id="modalTitle">Hasil Tangkapan</h2>
+            <div class="catch-name" id="modalResult">-</div>
+            <div class="comment-highlight" id="modalComment" style="display: none;">-</div>
+            <button class="btn-close" id="btnClose">Mancing Lagi</button>
+        </div>
+    </div>
+
+    <div class="task-overlay" id="taskOverlay">
+        <div class="task-box">
+            <div class="task-header">
+                <h3>Daftar Task Aktif</h3>
+                <button class="btn-close-task" id="btnCloseTask">&times;</button>
+            </div>
+            <div class="task-list-container" id="taskListContainer">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA STATE SISTEM GAME BARU ---
+        let validCode = "2026"; 
+        let activeTasks = [];  // Menyimpan struktur task yang diambil dari cookies.txt & task.txt
+        let catchPool = [];    // Menyimpan daftar ikan dari catch.txt
+        let inventory = {};    // Menggunakan localStorage untuk mencatat jumlah tangkapan
+
+        // Membaca status tangkapan lama dari memori lokal browser agar tidak reset saat refresh
+        if (localStorage.getItem('fishing_inventory')) {
+            inventory = JSON.parse(localStorage.getItem('fishing_inventory'));
+        }
+
+        // --- SISTEM PEMBACAAN FILE PENDUKUNG (TXT) ---
+        async function loadAllGameData() {
+            try {
+                // 1. Ambil Data Catch.txt
+                const resCatch = await fetch('catch.txt');
+                if (resCatch.ok) {
+                    const textCatch = await resCatch.text();
+                    catchPool = textCatch.split('\n')
+                        .map(l => l.trim())
+                        .filter(l => l.length > 0)
+                        .map(l => {
+                            const [item, comment, pct] = l.split('-');
+                            return { item, comment, pct: parseFloat(pct) || 0 };
+                        });
+                }
+
+                // 2. Ambil Data Task.txt
+                let taskTemplates = {};
+                const resTask = await fetch('task.txt');
+                if (resTask.ok) {
+                    const textTask = await resTask.text();
+                    textTask.split('\n').map(l => l.trim()).filter(l => l.length > 0).forEach(l => {
+                        const [id, reqStr] = l.split('-');
+                        if(id && reqStr) {
+                            const items = reqStr.split(';').map(i => {
+                                const [icon, qty] = i.split('x');
+                                return { icon: icon.trim(), needed: parseInt(qty) || 0 };
+                            });
+                            taskTemplates[id.trim()] = items;
+                        }
+                    });
+                }
+
+                // 3. Ambil Data Cookies.txt & Mapping Misi Utama
+                const resCookies = await fetch('cookies.txt');
+                if (resCookies.ok) {
+                    const data = await resCookies.text();
+                    const lines = data.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    if (lines.length > 0) validCode = lines[0];
+                    
+                    // Ambil daftar link-kodetask yang ada di cookies
+                    if (lines.length > 1) {
+                        let taskCounter = 1;
+                        const savedClearedTasks = JSON.parse(localStorage.getItem('cleared_tasks') || "[]");
+
+                        for (let i = 1; i < lines.length; i++) {
+                            const [link, taskId] = lines[i].split('-');
+                            if (link && taskId) {
+                                const cleanTaskId = taskId.trim();
+                                // Abaikan jika task ini sebelumnya sudah selesai diklik ambil linknya
+                                if (savedClearedTasks.includes(cleanTaskId + "_" + link)) continue;
+
+                                if (taskTemplates[cleanTaskId]) {
+                                    activeTasks.push({
+                                        displayId: String(taskCounter++).padStart(2, '0'),
+                                        taskId: cleanTaskId,
+                                        link: link.trim(),
+                                        requirements: JSON.parse(JSON.stringify(taskTemplates[cleanTaskId])), // deep copy
+                                        status: "progress" // progress, ready, claimed
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                console.log("Sistem Konten Berhasil Dimuat.", { activeTasks, catchPool });
+                renderTaskBoard();
+            } catch (err) {
+                console.error("Gagal membaca struktur file pendukung, fallback aktif.", err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadAllGameData);
+
+        // --- MANAJEMEN EVENT DOM INTERFASE ---
+        const welcomeOverlay = document.getElementById('welcomeOverlay');
+        const codeInputField = document.getElementById('codeInputField');
+        const btnStartGame = document.getElementById('btnStartGame');
+        const btnTaskTrigger = document.getElementById('btnTaskTrigger');
+        const taskOverlay = document.getElementById('taskOverlay');
+        const btnCloseTask = document.getElementById('btnCloseTask');
+        const taskListContainer = document.getElementById('taskListContainer');
+
+        codeInputField.addEventListener('input', () => {
+            if (codeInputField.value === validCode) {
+                btnStartGame.style.display = "block";
+            } else {
+                btnStartGame.style.display = "none";
+            }
+        });
+
+        btnStartGame.addEventListener('click', () => {
+            welcomeOverlay.style.opacity = "0";
+            setTimeout(() => { welcomeOverlay.style.display = "none"; }, 500);
+        });
+
+        btnTaskTrigger.addEventListener('click', () => {
+            renderTaskBoard();
+            taskOverlay.classList.add('show');
+        });
+
+        btnCloseTask.addEventListener('click', () => {
+            taskOverlay.classList.remove('show');
+        });
+
+        // --- RENDER MONITORING PAPAN MENU TASK ---
+        function renderTaskBoard() {
+            taskListContainer.innerHTML = "";
+            if (activeTasks.length === 0) {
+                taskListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Semua task selesai! 🎉</p>";
+                return;
+            }
+
+            activeTasks.forEach((task, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('task-item');
+
+                const title = document.createElement('div');
+                title.classList.add('task-item-title');
+                title.innerText = `Task ${task.displayId}`;
+                itemDiv.appendChild(title);
+
+                // Cek apakah requirement perlu ditampilkan (hanya tampil jika status masih 'progress')
+                if (task.status === "progress") {
+                    const reqsDiv = document.createElement('div');
+                    reqsDiv.classList.add('task-requirements');
+                    
+                    let componentsMet = true;
+                    task.requirements.forEach(req => {
+                        const currentQty = inventory[req.icon] || 0;
+                        if (currentQty < req.needed) componentsMet = false;
+                        
+                        const reqSpan = document.createElement('span');
+                        reqSpan.innerText = `${req.icon} ${currentQty}/${req.needed}`;
+                        reqsDiv.appendChild(reqSpan);
+                    });
+                    itemDiv.appendChild(reqsDiv);
+
+                    // Atur Tombol Klaim Berdasarkan Ketercukupan Item
+                    const btnClaim = document.createElement('button');
+                    btnClaim.classList.add('btn-task-claim');
+                    if (componentsMet) {
+                        btnClaim.classList.add('ready');
+                        btnClaim.innerText = "Claim";
+                        btnClaim.onclick = () => claimTaskRequirements(index);
+                    } else {
+                        btnClaim.classList.add('disabled');
+                        btnClaim.innerText = "Claim";
+                        btnClaim.disabled = true;
+                    }
+                    itemDiv.appendChild(btnClaim);
+
+                } else if (task.status === "claimed") {
+                    // Jika sudah diclaim, ganti isi konten menjadi tombol [Ambil Link] secara langsung
+                    const btnGetLink = document.createElement('button');
+                    btnGetLink.classList.add('btn-task-claim', 'get-link');
+                    btnGetLink.innerText = "Ambil Link";
+                    btnGetLink.onclick = () => openTaskLink(index);
+                    itemDiv.appendChild(btnGetLink);
+                }
+
+                taskListContainer.appendChild(itemDiv);
+
+                if (index < activeTasks.length - 1) {
+                    const divider = document.createElement('hr');
+                    divider.classList.add('task-divider');
+                    taskListContainer.appendChild(divider);
+                }
+            });
+        }
+
+        // Fungsi Eksekusi Pengurangan Inventori Saat Tombol Claim Ditekan
+        function claimTaskRequirements(index) {
+            const task = activeTasks[index];
+            // Kurangi material/ikan dari inventori
+            task.requirements.forEach(req => {
+                inventory[req.icon] = (inventory[req.icon] || 0) - req.needed;
+                if (inventory[req.icon] < 0) inventory[req.icon] = 0;
+            });
+            localStorage.setItem('fishing_inventory', JSON.stringify(inventory));
+            
+            // Ubah status ke claimed agar menampilkan tombol Ambil Link
+            task.status = "claimed";
+            renderTaskBoard();
+        }
+
+        // Fungsi Eksekusi Pengambilan Link dan Penghapusan Misi Terkait
+        function openTaskLink(index) {
+            const task = activeTasks[index];
+            window.open(task.link, '_blank');
+
+            // Simpan status pembersihan permanen ke localstorage agar tidak muncul lagi saat di-refresh
+            const savedClearedTasks = JSON.parse(localStorage.getItem('cleared_tasks') || "[]");
+            savedClearedTasks.push(task.taskId + "_" + task.link);
+            localStorage.setItem('cleared_tasks', JSON.stringify(savedClearedTasks));
+
+            // Hapus task dari daftar menu secara instan
+            activeTasks.splice(index, 1);
+            renderTaskBoard();
+        }
+
+        // --- INTI SISTEM MINI GAME MANCING ---
+        const btnAction = document.getElementById('btnAction');
+        const btnClose = document.getElementById('btnClose');
+        const rod = document.getElementById('rod');
+        const line = document.getElementById('line');
+        const bobber = document.getElementById('bobber');
+        const splashContainer = document.getElementById('splashContainer');
+        const powerContainer = document.getElementById('powerContainer');
+        const powerBar = document.getElementById('powerBar');
+        const statusText = document.getElementById('statusText');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalResult = document.getElementById('modalResult');
+        const modalComment = document.getElementById('modalComment');
+        const modalTitle = document.getElementById('modalTitle');
+        const skyArea = document.getElementById('skyArea');
+        const gameContainer = document.getElementById('gameContainer');
+        const countdownText = document.getElementById('countdownText');
+        const tensionContainer = document.getElementById('tensionContainer');
+        const tensionBar = document.getElementById('tensionBar');
+
+        const birdGifs = [
+            "https://media.tenor.com/a_bwSoIpYBUAAAAi/bird.gif", "https://media.tenor.com/iyOAsWnEv1wAAAAi/bird.gif"
+        ];
+
+        let gameState = "idle"; 
+        let power = 0;
+        let powerInterval;
+        let currentTargetX = 0; 
+        let countdownValue = 5;
+        let countdownTimerInterval;
+        let tensionValue = 30; 
+        let tensionDrainInterval;
+
+        function spawnBird() {
+            const currentBirds = document.querySelectorAll('.bird-gif');
+            if (currentBirds.length >= 2) return; 
+
+            const bird = document.createElement('img');
+            bird.classList.add('bird-gif');
+            const randomIndex = Math.floor(Math.random() * birdGifs.length);
+            const chosenGif = birdGifs[randomIndex];
+            bird.src = chosenGif;
+
+            bird.style.transform = chosenGif.includes("iyOAsWnEv1w") ? "scaleX(-1)" : "scaleX(1)";
+            const containerHeight = skyArea.clientHeight;
+            const randomY = Math.random() * ((containerHeight - 85) - 45) + 45;
+            
+            bird.style.top = randomY + "px";
+            bird.style.right = "-45px";
+            skyArea.appendChild(bird);
+
+            const duration = Math.random() * 4000 + 5000; 
+            const start = performance.now();
+
+            function animateBird(time) {
+                const elapsed = time - start;
+                const progress = elapsed / duration;
+                bird.style.right = (-45 + (progress * (skyArea.clientWidth + 70))) + "px";
+                if (progress < 1) requestAnimationFrame(animateBird); else bird.remove();
+            }
+            requestAnimationFrame(animateBird);
+        }
+
+        setInterval(() => {
+            if (Math.random() > 0.4 && welcomeOverlay.style.display === "none") spawnBird();
+        }, 3000);
+
+        btnAction.addEventListener('mousedown', handleButtonPress);
+        btnAction.addEventListener('touchstart', (e) => { e.preventDefault(); handleButtonPress(); });
+        window.addEventListener('mouseup', handleButtonRelease);
+        window.addEventListener('touchend', handleButtonRelease);
+
+        btnClose.addEventListener('click', () => {
+            modalOverlay.classList.remove('show');
+            resetGame();
+        });
+
+        function triggerMusicPlay() {
+            if (window.bgMusic) {
+                if(bgMusic.paused) bgMusic.currentTime = 0; 
+                bgMusic.play().catch(() => console.log("Autoplay ditahan browser."));
+            }
+        }
+
+        function handleButtonPress() {
+            triggerMusicPlay();
+            if (gameState === "idle") startPowerCharge();
+            else if (gameState === "biting" || gameState === "pulling") struggleClick();
+        }
+
+        function handleButtonRelease() {
+            if (gameState === "charging") releasePowerCharge();
+        }
+
+        function startPowerCharge() {
+            gameState = "charging";
+            power = 0;
+            powerContainer.style.display = "block";
+            statusText.innerText = "Mengisi tenaga...";
+            rod.classList.add('windup');
+
+            powerInterval = setInterval(() => {
+                power += 2.5;
+                if (power > 100) power = 100; 
+                powerBar.style.width = power + "%";
+            }, 20);
+        }
+
+        function releasePowerCharge() {
+            clearInterval(powerInterval);
+            gameState = "casting";
+            btnAction.disabled = true;
+            powerContainer.style.display = "none";
+            statusText.innerText = "Melempar joran!";
+            rod.classList.remove('windup');
+            rod.classList.add('cast-action');
+
+            const realContainerHeight = gameContainer.clientHeight;
+            const targetY = realContainerHeight * 0.50; 
+            const minX = 140; 
+            const maxX = gameContainer.clientWidth - 40; 
+            currentTargetX = minX + ((power / 100) * (maxX - minX));
+
+            const skyHeight = realContainerHeight * 0.50; 
+            const rodPivotX = 55; const rodPivotY = skyHeight - 45; 
+            const rodAngleRad = -25 * Math.PI / 180; 
+            const rodEndX = rodPivotX + Math.cos(rodAngleRad) * 110;
+            const rodEndY = rodPivotY + Math.sin(rodAngleRad) * 110;
+
+            const dx = currentTargetX - rodEndX; const dy = targetY - rodEndY; 
+            const lineLength = Math.sqrt(dx * dx + dy * dy);
+            const localAngle = (Math.atan2(dy, dx) * 180 / Math.PI) - (-25);
+
+            setTimeout(() => {
+                line.style.height = lineLength + "px";
+                line.style.transform = `rotate(${localAngle - 90}deg)`; 
+                bobber.style.display = "block";
+            }, 150);
+
+            setTimeout(() => {
+                gameState = "waiting";
+                statusText.innerText = "Menunggu umpan dilirik ikan...";
+                setTimeout(fishBiting, Math.random() * 2500 + 1500);
+            }, 1000);
+        }
+
+        function fishBiting() {
+            if (gameState !== "waiting") return;
+            gameState = "biting";
+            statusText.innerText = "IKAN MAKAN! KLIK CEPAT BERULANG KALI!!";
+            btnAction.innerText = "TARIK !!";
+            btnAction.disabled = false;
+            bobber.classList.add('bite');
+
+            tensionValue = 30; 
+            tensionBar.style.width = tensionValue + "%";
+            tensionContainer.style.display = "block";
+
+            countdownValue = 5;
+            triggerCountdownVisual(countdownValue);
+
+            countdownTimerInterval = setInterval(() => {
+                countdownValue--;
+                if (countdownValue > 0) {
+                    triggerCountdownVisual(countdownValue);
+                } else {
+                    clearInterval(countdownTimerInterval);
+                    clearInterval(tensionDrainInterval);
+                    failFishing();
+                }
+            }, 1000);
+
+            tensionDrainInterval = setInterval(() => {
+                tensionValue -= 2.1;
+                if (tensionValue < 0) tensionValue = 0;
+                tensionBar.style.width = tensionValue + "%";
+            }, 100);
+        }
+
+        function triggerCountdownVisual(number) {
+            countdownText.innerText = number;
+            countdownText.classList.remove('countdown-animate');
+            void countdownText.offsetWidth; 
+            countdownText.classList.add('countdown-animate');
+        }
+
+        function struggleClick() {
+            if (gameState === "biting") gameState = "pulling"; 
+            tensionValue += 8;
+            if (tensionValue > 100) tensionValue = 100;
+            tensionBar.style.width = tensionValue + "%";
+
+            if (tensionValue >= 100) {
+                clearInterval(countdownTimerInterval);
+                clearInterval(tensionDrainInterval);
+                successPulling();
+            }
+        }
+
+        function failFishing() {
+            gameState = "idle";
+            statusText.innerText = "Ikannya lepas...";
+            bobber.classList.remove('bite');
+            countdownText.classList.remove('countdown-animate');
+            tensionContainer.style.display = "none";
+            showResult(null); 
+        }
+
+        function successPulling() {
+            gameState = "rewarding";
+            btnAction.disabled = true;
+            statusText.innerText = "Hap! Berhasil menarik tangkapan!";
+            bobber.classList.remove('bite');
+            countdownText.classList.remove('countdown-animate');
+            tensionContainer.style.display = "none";
+
+            const realContainerHeight = gameContainer.clientHeight;
+            splashContainer.style.left = currentTargetX + "px";
+            splashContainer.style.top = (realContainerHeight * 0.50) + "px";
+            splashContainer.style.display = "block";
+            splashContainer.classList.add('splash-active');
+
+            line.style.height = "0px"; line.style.transform = "rotate(0deg)";
+            setTimeout(() => { bobber.style.display = "none"; }, 400);
+            rod.className = "rod";
+
+            setTimeout(() => {
+                splashContainer.style.display = "none";
+                splashContainer.classList.remove('splash-active');
+                
+                // --- LOGIKA BARU PENENTUAN PERSENTASE RASIO DAPAT/GAGAL (60:40) ---
+                const isSuccess = Math.random() < 0.60; // 60% peluang sukses mendapatkan ikan
+                
+                if (isSuccess && catchPool.length > 0) {
+                    const rolledFish = rollFishFromPool();
+                    if(rolledFish) {
+                        // Tambahkan ikon ke inventory untuk tracking misi
+                        const matchedIcon = extractIcon(rolledFish.item);
+                        if(matchedIcon) {
+                            inventory[matchedIcon] = (inventory[matchedIcon] || 0) + 1;
+                            localStorage.setItem('fishing_inventory', JSON.stringify(inventory));
+                        }
+                        showResult(rolledFish);
+                    } else {
+                        showResult(null);
+                    }
+                } else {
+                    showResult(null);
+                }
+            }, 700);
+        }
+
+        // Mengambil emoji/icon dari teks item (contoh: "🦑 Cumi Cumi" -> "🦑")
+        function extractIcon(str) {
+            const match = str.match(/[\u{1F300}-\u{1F9FF}]/u);
+            return match ? match[0] : str.trim();
+        }
+
+        // Mengundi jenis ikan berdasarkan total bobot persentase di catch.txt
+        function rollFishFromPool() {
+            const totalWeight = catchPool.reduce((sum, f) => sum + f.pct, 0);
+            let randomRoll = Math.random() * totalWeight;
+            
+            for (let i = 0; i < catchPool.length; i++) {
+                if (randomRoll < catchPool[i].pct) {
+                    return catchPool[i];
+                }
+                randomRoll -= catchPool[i].pct;
+            }
+            return catchPool[catchPool.length - 1];
+        }
+
+        function showResult(fishObj) {
+            if (fishObj) {
+                modalTitle.innerText = "BERHASIL! 🎉";
+                modalTitle.style.color = "#2ed573";
+                modalResult.innerText = fishObj.item;
+                modalComment.innerText = fishObj.comment;
+                modalComment.style.display = "inline-block";
+            } else {
+                modalTitle.innerText = "ZONK!";
+                modalTitle.style.color = "#ff4757";
+                modalResult.innerText = "Gagal dapat ikan 😢";
+                modalComment.style.display = "none";
+            }
+            modalOverlay.classList.add('show');
+        }
+
+        function resetGame() {
+            gameState = "idle";
+            btnAction.innerText = "LEMPAR UMPAN";
+            btnAction.disabled = false;
+            statusText.innerText = "Tahan tombol untuk mengisi tenaga lemparan!";
+            powerBar.style.width = "0%";
+            line.style.height = "0px"; line.style.transform = "rotate(0deg)";
+            bobber.style.display = "none";
+            rod.className = "rod"; 
+            countdownText.classList.remove('countdown-animate');
+            tensionContainer.style.display = "none";
+            renderTaskBoard();
+        }
+    </script>
+</body>
+</html>
