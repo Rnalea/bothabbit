@@ -609,9 +609,7 @@
 
     <script>
         // --- ADAPTASI RESET KETIKA REFRESH ---
-        // Sesuai request, bahan penampung task (inventory) dan status misi disapu bersih saat reload/refresh
-        localStorage.removeItem('fishing_inventory');
-        localStorage.removeItem('cleared_tasks');
+        // Lagi dihapus fungsi resetnya
         
         let validCode = "2026"; 
         let activeTasks = [];  
@@ -699,17 +697,25 @@
                             let taskCounter = 1;
                             // Membaca link misi dimulai dari baris ke-3 (indeks 2)
                             for (let i = 2; i < lines.length; i++) {
-                                const [link, taskId] = lines[i].split('-');
-                                if (link && taskId) {
-                                    const cleanTaskId = taskId.trim();
-                                    if (taskTemplates[cleanTaskId]) {
-                                        activeTasks.push({
-                                            displayId: String(taskCounter++).padStart(2, '0'),
-                                            taskId: cleanTaskId,
-                                            link: link.trim(),
-                                            requirements: JSON.parse(JSON.stringify(taskTemplates[cleanTaskId])), 
-                                            status: "progress" 
-                                        });
+                                // Memisahkan berdasarkan tanda '-' terakhir atau memisahkan string dengan aman
+                                const separatorIndex = lines[i].lastIndexOf('-');
+    
+                                if (separatorIndex !== -1) {
+                                    const link = lines[i].substring(0, separatorIndex).trim();
+                                    const taskId = lines[i].substring(separatorIndex + 1).trim();
+
+                                    if (link && taskId) {
+                                        if (taskTemplates[taskId]) {
+                                            activeTasks.push({
+                                                displayId: String(taskCounter++).padStart(2, '0'),
+                                                taskId: taskId,
+                                                link: link,
+                                                requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])), 
+                                                status: "progress" 
+                                            });
+                                        } else {
+                                            console.warn(`⚠️ ID Task "${taskId}" dari cookies.txt tidak ditemukan di task.txt`);
+                                        }
                                     }
                                 }
                             }
