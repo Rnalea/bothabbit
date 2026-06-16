@@ -1,0 +1,4 @@
+// Letakkan ini di bagian atas <script> bersama dengan pembersihan task lainnya
+localStorage.removeItem('fishing_inventory');
+localStorage.removeItem('cleared_tasks');
+localStorage.removeItem('total_catch_history'); // <--- TAMBAHKAN BARIS INI UNTUK RESET TOTAL HISTORY
