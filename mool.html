@@ -496,15 +496,21 @@
         .btn-task-claim.ready { background-color: #ff9f43; color: white; }
         .btn-task-claim.get-link { background-color: #2ed573; color: white; }
         .task-divider { border: 0; height: 1px; background: #e2e8f0; margin: 15px 0; }
+        .control-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            z-index: 10;
+        }
         .footer-text {
             color: #000000;         /* Mengatur warna teks menjadi hitam */
-            font-weight: lighter;
-            font-size: 0.5rem;      /* Mengatur ukuran teks */
-            margin-top: 25px;       /* Memberi jarak aman dari tombol di atasnya */
-            margin-bottom: 20px;    /* Memberi jarak dari batas paling bawah layar browser */
+            font-weight: lighter;   /* Membuat teks menjadi tipis */
+            font-size: 0.7rem;      /* Mengatur ukuran teks */
+            margin-top: 10px;       /* Memberi jarak aman dari tombol di atasnya */
+            margin-bottom: 10px;    /* Memberi jarak dari batas paling bawah layar browser */
             text-align: center;     /* Memastikan teks berada tepat di tengah */
-            z-index: 10;            /* Memastikan teks berada di lapisan atas background */
-            opacity: 0.6;
+            opacity: 0.6;           /* Mengatur transparansi teks */
         }
     </style>
 </head>
@@ -575,10 +581,10 @@
     </div>
 
     <div class="status-text" id="statusText">Tahan tombol untuk mengisi tenaga lemparan!</div>
-    <button class="btn-action" id="btnAction">LEMPAR UMPAN</button>
-
-    <!-- Footer text hati -->
-    <div class="footer-text">Selamat Memancing</div>
+    <div class="control-area">
+        <button class="btn-action" id="btnAction">LEMPAR UMPAN</button>
+        <div class="footer-text">t.me/sampaikanhati</div>
+    </div>
     
     <!-- Modal Hasil Tangkapan Utama -->
     <div class="modal-overlay" id="modalOverlay">
