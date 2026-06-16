@@ -496,6 +496,15 @@
         .btn-task-claim.ready { background-color: #ff9f43; color: white; }
         .btn-task-claim.get-link { background-color: #2ed573; color: white; }
         .task-divider { border: 0; height: 1px; background: #e2e8f0; margin: 15px 0; }
+        .footer-text {
+            color: #000000;         /* Mengatur warna teks menjadi hitam */
+            font-weight: bold;      /* Membuat teks menjadi tebal */
+            font-size: 1.1rem;      /* Mengatur ukuran teks */
+            margin-top: 25px;       /* Memberi jarak aman dari tombol di atasnya */
+            margin-bottom: 20px;    /* Memberi jarak dari batas paling bawah layar browser */
+            text-align: center;     /* Memastikan teks berada tepat di tengah */
+            z-index: 10;            /* Memastikan teks berada di lapisan atas background */
+        }
     </style>
 </head>
 <body>
@@ -567,6 +576,8 @@
     <div class="status-text" id="statusText">Tahan tombol untuk mengisi tenaga lemparan!</div>
     <button class="btn-action" id="btnAction">LEMPAR UMPAN</button>
 
+    //Footer teks hati
+    <div class="footer-text">Selamat Memancing</div>
     <!-- Modal Hasil Tangkapan Utama -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
