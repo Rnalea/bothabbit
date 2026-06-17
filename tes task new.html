@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pemancingan Hati X BUBU v2</title>
+    <title>Pemancingan Hati X BUBU</title>
     <style>
         * {
             box-sizing: border-box;
@@ -799,7 +799,7 @@
             const WAKTU_TENGGANG = 10 * 1000; // Waktu mundur dalam milidetik tombol Coba Lagi
             const waktuSekarang = Date.now();
 
-            // Saring otomatis: Buang task yang statusnya 'clicked' dan sudah lewat dari 3 menit
+            // Saring otomatis: Buang task yang statusnya 'clicked' dan sudah lewat dari 10 detik
             activeTasks = activeTasks.filter(task => {
                 if (task.status === "clicked" && (waktuSekarang - task.clickTime) > WAKTU_TENGGANG) {
                     return false; // Buang dari daftar (Hapus Permanen)
@@ -876,15 +876,19 @@
                     const divider = document.createElement('hr');
                     divider.classList.add('task-divider');
                     taskListContainer.appendChild(divider);
-            // Otomatis me-refresh tampilan papan setiap 1 detik jika ada task yang sedang dalam masa tenggang
+                }
+            });
+
+            // Otomatis me-refresh tampilan papan setiap 1 detik jika ada task yang berstatus 'clicked'
             const adaTaskClicked = activeTasks.some(task => task.status === "clicked");
+            // Cek lagi apakah panel task masih terbuka, jika iya lakukan render ulang
             if (adaTaskClicked) {
                 setTimeout(() => {
-                    // Cek lagi apakah panel task masih terbuka, jika iya lakukan render ulang
                     if (taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
                         renderTaskBoard();
-                }
-            }, 1000); // Mengulang setiap 1 detik
+                    }
+                }, 1000);        // Mengulang setiap 1 detik
+            }
         }
 
         // --- RENDER PAPAN HISTORY SELEKTIF (HANYA MUNCUL JIKA SUDAH PERNAH DIDAPAT) ---
@@ -1255,7 +1259,7 @@
             localStorage.setItem('cleared_tasks', JSON.stringify(activeTasks));
             // -------------------------------------------------------------------
 
-            if(taskOverlay.classList.contains('show') && panelTitle.innerText === \"Daftar Task Aktif\") {
+            if(taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
                 renderTaskBoard();
             }
         }
