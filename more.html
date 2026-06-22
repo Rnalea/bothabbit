@@ -651,43 +651,89 @@
         let catchPool = [];    
         let inventory = {};    
         let totalCatchHistory = {};    
-        let boardRefreshTimer = null; // Solusi penumpukan interval render
+        let boardRefreshTimer = null; 
 
-        // Migrasi & Load Data menggunakan Brankas Sandi
-        if (getLokalSandi('fishing_inventory')) {
-            inventory = getLokalSandi('fishing_inventory');
-        } else if (localStorage.getItem('fishing_inventory')) {
-            try {
-                inventory = JSON.parse(localStorage.getItem('fishing_inventory'));
-                setLokalSandi('fishing_inventory', inventory);
-                localStorage.removeItem('fishing_inventory');
-            } catch(e){}
-        }
-      
-        if (getLokalSandi('total_catch_history')) {
-            totalCatchHistory = getLokalSandi('total_catch_history');
-        } else if (localStorage.getItem('total_catch_history')) {
-            try {
-                totalCatchHistory = JSON.parse(localStorage.getItem('total_catch_history'));
-                setLokalSandi('total_catch_history', totalCatchHistory);
-                localStorage.removeItem('total_catch_history');
-            } catch(e){}
+        // --- SISTEM MIGRASI DATA AMAN (Mencegah Overwrite Data Kosong) ---
+        function inisialisasiDatabaseLokal() {
+            // Ambil data inventory terenkripsi, jika tidak ada cek data lama polos
+            let savedInv = getLokalSandi('fishing_inventory');
+            if (savedInv) {
+                inventory = savedInv;
+            } else if (localStorage.getItem('fishing_inventory')) {
+                try {
+                    inventory = JSON.parse(localStorage.getItem('fishing_inventory')) || {};
+                    setLokalSandi('fishing_inventory', inventory);
+                    localStorage.removeItem('fishing_inventory');
+                } catch(e) { inventory = {}; }
+            } else {
+                inventory = {};
+            }
+
+            // Ambil data riwayat tangkapan terenkripsi, jika tidak ada cek data lama polos
+            let savedHistory = getLokalSandi('total_catch_history');
+            if (savedHistory) {
+                totalCatchHistory = savedHistory;
+            } else if (localStorage.getItem('total_catch_history')) {
+                try {
+                    totalCatchHistory = JSON.parse(localStorage.getItem('total_catch_history')) || {};
+                    setLokalSandi('total_catch_history', totalCatchHistory);
+                    localStorage.removeItem('total_catch_history');
+                } catch(e) { totalCatchHistory = {}; }
+            } else {
+                totalCatchHistory = {};
+            }
         }
 
-        // --- SISTEM PEMBACAAN FILE PENDUKUNG (TXT) ---
+        // Panggil inisialisasi database sebelum melakukan fetch data ke server
+        inisialisasiDatabaseLokal();
+
+        // --- SISTEM PEMBACAAN FILE PENDUKUNG REALTIME ---
         async function loadAllGameData() {
             try {
-                if (getLokalSandi('fishing_inventory')) {
-                    inventory = getLokalSandi('fishing_inventory');
-                }
-                if (getLokalSandi('total_catch_history')) {
-                    totalCatchHistory = getLokalSandi('total_catch_history');
+                // Selalu pastikan memori runtime memegang data brankas sandi terbaru
+                inisialisasiDatabaseLokal();
+
+                // Ambil data secara realtime dan hilangkan cache browser
+                const [cookiesRes, taskRes, catchRes] = await Promise.all([
+                    fetch('cookies.txt?v=' + Date.now(), { cache: "no-store" }),
+                    fetch('task.txt?v=' + Date.now(), { cache: "no-store" }),
+                    fetch('catch.txt?v=' + Date.now(), { cache: "no-store" })
+                ]);
+
+                const cookiesText = await cookiesRes.text();
+                const taskText = await taskRes.text();
+
+                const cookiesLines = cookiesText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                const taskLines = taskText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+                if (cookiesLines.length > 0) validCode = cookiesLines[0]; 
+                
+                if (cookiesLines.length > 1) {
+                    const currentCookiesVersion = cookiesLines[1]; 
+                    const lastSavedVersion = localStorage.getItem(kunciSandi('last_cookies_version')) ? bukaSandi(localStorage.getItem(kunciSandi('last_cookies_version'))) : null;
+
+                    // Jika versi cookies di server berubah, lakukan RESET TOTAL secara bersih
+                    if (currentCookiesVersion !== lastSavedVersion) {
+                        localStorage.removeItem(kunciSandi('cleared_tasks'));
+                        localStorage.removeItem(kunciSandi('fishing_inventory'));
+                        localStorage.removeItem(kunciSandi('permanent_completed_tasks')); 
+                        inventory = {}; 
+                        totalCatchHistory = {};
+                        activeTasks = [];
+                        localStorage.setItem(kunciSandi('last_cookies_version'), kunciSandi(currentCookiesVersion));
+                        setLokalSandi('fishing_inventory', {});
+                        setLokalSandi('total_catch_history', {});
+                        setLokalSandi('cleared_tasks', {});
+                        console.log("⚠️ Deteksi Perubahan Versi Cookie Server! Seluruh data di-reset.");
+                    }
                 }
 
-                // Ambil Data Catch.txt
-                const resCatch = await fetch('catch.txt', { cache: "no-store" });
-                if (resCatch.ok) {
-                    const textCatch = await resCatch.text();
+                // Muat Map penyaring status pengerjaan task dari brankas terenkripsi
+                let clearedTasksMap = getLokalSandi('cleared_tasks') || {};
+
+                // Proses data catch.txt ke dalam pool pancingan
+                if (catchRes.ok) {
+                    const textCatch = await catchRes.text();
                     catchPool = textCatch.split('\n')
                         .map(l => l.trim())
                         .filter(l => l.length > 0)
@@ -702,91 +748,70 @@
                     setLokalSandi('total_catch_history', totalCatchHistory);
                 }
 
-                // Ambil Data Task.txt
+                // Ambil prasyarat dari task.txt
                 let taskTemplates = {};
-                const resTask = await fetch('task.txt', { cache: "no-store" });
-                if (resTask.ok) {
-                    const textTask = await resTask.text();
-                    textTask.split('\n').map(l => l.trim()).filter(l => l.length > 0).forEach(l => {
-                        const [id, reqStr] = l.split('-');
-                        if(id && reqStr) {
-                            const items = reqStr.split(';').map(i => {
-                                const [icon, qty] = i.split('x');
-                                return { icon: icon.trim(), needed: parseInt(qty) || 0 };
-                            });
-                            taskTemplates[id.trim()] = items;
-                        }
-                    });
-                }
-
-                // Ambil Data Cookies.txt
-                const resCookies = await fetch('cookies.txt', { cache: "no-store" });
-                if (resCookies.ok) {
-                    const data = await resCookies.text();
-                    const lines = data.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    
-                    if (lines.length > 0) validCode = lines[0]; 
-                    
-                    if (lines.length > 1) {
-                        const currentCookiesVersion = lines[1]; 
-                        const lastSavedVersion = localStorage.getItem(kunciSandi('last_cookies_version')) ? bukaSandi(localStorage.getItem(kunciSandi('last_cookies_version'))) : null;
-
-                        if (currentCookiesVersion !== lastSavedVersion) {
-                            localStorage.removeItem(kunciSandi('cleared_tasks'));
-                            localStorage.removeItem(kunciSandi('fishing_inventory'));
-                            localStorage.removeItem(kunciSandi('permanent_completed_tasks')); 
-                            inventory = {}; 
-                            activeTasks = [];
-                            localStorage.setItem(kunciSandi('last_cookies_version'), kunciSandi(currentCookiesVersion));
-                            console.log("⚠️ Deteksi Perubahan Versi! Data di-reset.");
-                        } else {
-                            if (getLokalSandi('cleared_tasks')) {
-                                activeTasks = getLokalSandi('cleared_tasks');
+                taskLines.forEach(l => {
+                    const [id, reqStr] = l.split('-');
+                    if(id && reqStr) {
+                        const items = reqStr.split(';').map(i => {
+                            const separator = i.lastIndexOf('x');
+                            if (separator !== -1) {
+                                return { 
+                                    icon: i.substring(0, separator).trim(), 
+                                    needed: parseInt(i.substring(separator + 1)) || 0 
+                                };
                             }
+                            return null;
+                        }).filter(i => i);
+                        taskTemplates[id.trim()] = items;
+                    }
+                });
+
+                // Sinkronisasi & Rekonstruksi papan task aktif dari cookies.txt
+                activeTasks = [];
+                let taskCounter = 1;
+
+                for (let i = 2; i < cookiesLines.length; i++) {
+                    const separatorIndex = cookiesLines[i].lastIndexOf('-');
+                    if (separatorIndex === -1) continue;
+
+                    const link = cookiesLines[i].substring(0, separatorIndex).trim();
+                    const taskId = cookiesLines[i].substring(separatorIndex + 1).trim();
+
+                    if (link && taskId && taskTemplates[taskId]) {
+                        let savedStatusData = clearedTasksMap[taskId];
+                        
+                        // Jika status task adalah string (data lama migrasi) atau bertanda permanent_done, sembunyikan!
+                        if (savedStatusData === "permanent_done" || savedStatusData === "clicked") {
+                            taskCounter++; 
+                            continue;
                         }
 
-                        let permanentCompleted = getLokalSandi('permanent_completed_tasks') || [];
+                        // Tentukan status pengerjaan default atau muat riwayat dari brankas
+                        let currentStatus = "progress";
+                        let currentClickTime = null;
 
-                        if (activeTasks.length === 0) {
-                            let taskCounter = 1;
-                            for (let i = 2; i < lines.length; i++) {
-                                const separatorIndex = lines[i].lastIndexOf('-');
-                                if (separatorIndex !== -1) {
-                                    const link = lines[i].substring(0, separatorIndex).trim();
-                                    const taskId = lines[i].substring(separatorIndex + 1).trim();
-
-                                    if (link && taskId) {
-                                        if (permanentCompleted.includes(taskId)) {
-                                            taskCounter++; 
-                                            continue;
-                                        }
-
-                                        if (taskTemplates[taskId]) {
-                                            activeTasks.push({
-                                                displayId: String(taskCounter++).padStart(2, '0'),
-                                                taskId: taskId,
-                                                link: link,
-                                                requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])), 
-                                                status: "progress" 
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-                            setLokalSandi('cleared_tasks', activeTasks);
-                        } else {
-                            activeTasks.forEach(task => {
-                                if (task.status === "progress" && taskTemplates[task.taskId]) {
-                                    task.requirements = JSON.parse(JSON.stringify(taskTemplates[task.taskId]));
-                                }
-                            });
-                            setLokalSandi('cleared_tasks', activeTasks);
+                        if (savedStatusData && typeof savedStatusData === "object") {
+                            currentStatus = savedStatusData.status || "progress";
+                            currentClickTime = savedStatusData.clickTime || null;
                         }
+
+                        activeTasks.push({
+                            displayId: String(taskCounter++).padStart(2, '0'),
+                            taskId: taskId,
+                            link: link,
+                            requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])), 
+                            status: currentStatus,
+                            clickTime: currentClickTime
+                        });
                     }
                 }
-                console.log("Sistem Konten Berhasil Dimuat Terenkripsi.", { activeTasks, catchPool });
+
+                // Simpan struktur terfilter ke lokal storage
+                setLokalSandi('cleared_tasks', clearedTasksMap);
+                console.log("Sistem Game Berhasil Dimuat Realtime & Terenkripsi.");
             } catch (err) {
-                console.error("Gagal membaca struktur file pendukung.", err);
+                console.error("Gagal membaca struktur file pendukung realtime.", err);
             }
         }
 
@@ -853,24 +878,22 @@
 
         // --- RENDER MONITORING PAPAN MENU TASK ---
         function renderTaskBoard() {
-            if(boardRefreshTimer) clearTimeout(boardRefreshTimer); // Hapus antrean timer lama
+            if(boardRefreshTimer) clearTimeout(boardRefreshTimer); 
             taskListContainer.innerHTML = "";
+            
             const WAKTU_TENGGANG = 10 * 1000; 
             const waktuSekarang = Date.now();
+            let clearedTasksMap = getLokalSandi('cleared_tasks') || {};
 
+            // Lakukan penyaringan masa tenggang secara berkala
             activeTasks = activeTasks.filter(task => {
                 if (task.status === "clicked" && (waktuSekarang - task.clickTime) > WAKTU_TENGGANG) {
-                    let permanentCompleted = getLokalSandi('permanent_completed_tasks') || [];
-                    if (!permanentCompleted.includes(task.taskId)) {
-                        permanentCompleted.push(task.taskId);
-                        setLokalSandi('permanent_completed_tasks', permanentCompleted);
-                    }
+                    clearedTasksMap[task.taskId] = "permanent_done"; 
+                    setLokalSandi('cleared_tasks', clearedTasksMap);
                     return false; 
                 }
                 return true; 
             });
-            
-            setLokalSandi('cleared_tasks', activeTasks);
 
             if (activeTasks.length === 0) {
                 taskListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Semua task selesai! 🎉</p>";
@@ -906,7 +929,7 @@
                     if (componentsMet) {
                         btnClaim.classList.add('ready');
                         btnClaim.innerText = "Claim";
-                        btnClaim.onclick = () => claimTaskRequirements(task.taskId); // AMAN: Menggunakan ID asli
+                        btnClaim.onclick = () => claimTaskRequirements(task.taskId);
                     } else {
                         btnClaim.classList.add('disabled');
                         btnClaim.innerText = "Claim";
@@ -918,8 +941,9 @@
                     const btnGetLink = document.createElement('button');
                     btnGetLink.classList.add('btn-task-claim', 'get-link');
                     btnGetLink.innerText = "Ambil Link";
-                    btnGetLink.onclick = () => openTaskLink(task.taskId); // AMAN: Menggunakan ID asli
+                    btnGetLink.onclick = () => openTaskLink(task.taskId);
                     itemDiv.appendChild(btnGetLink);
+                    
                 } else if (task.status === "clicked") {
                     const sisaWaktuDetik = Math.max(0, Math.ceil((WAKTU_TENGGANG - (waktuSekarang - task.clickTime)) / 1000));
                     
@@ -935,6 +959,7 @@
                 taskListContainer.appendChild(itemDiv);
             });
 
+            // Jalankan loop refresh penunjuk detik mundur jika ada task berstatus 'clicked'
             const adaTaskClicked = activeTasks.some(task => task.status === "clicked");
             if (adaTaskClicked) {
                 boardRefreshTimer = setTimeout(() => {
@@ -976,18 +1001,23 @@
             const task = activeTasks.find(t => t.taskId === taskId);
             if (!task) return;
 
+            // Kurangi item di kantong inventory pemain
             task.requirements.forEach(req => {
                 inventory[req.icon] = (inventory[req.icon] || 0) - req.needed;
                 if (inventory[req.icon] < 0) inventory[req.icon] = 0;
             });
             
             task.status = "claimed";
+            
+            // Simpan status pengerjaan objek ke dalam brankas sandi map
+            let clearedTasksMap = getLokalSandi('cleared_tasks') || {};
+            clearedTasksMap[taskId] = { status: "claimed", clickTime: null };
+            
             setLokalSandi('fishing_inventory', inventory);
-            setLokalSandi('cleared_tasks', activeTasks);
+            setLokalSandi('cleared_tasks', clearedTasksMap);
             renderTaskBoard();
         }
 
-        // PERBAIKAN UTAMA: Pencarian berbasis ID Unik
         function openTaskLink(taskId) {
             const task = activeTasks.find(t => t.taskId === taskId);
             if (!task) return;
@@ -996,7 +1026,11 @@
             task.status = "clicked"; 
             task.clickTime = Date.now(); 
             
-            setLokalSandi('cleared_tasks', activeTasks);
+            // Masukkan data masa tenggang ke brankas sandi lokal agar jika di-refresh tidak respawn
+            let clearedTasksMap = getLokalSandi('cleared_tasks') || {};
+            clearedTasksMap[taskId] = { status: "clicked", clickTime: task.clickTime };
+            
+            setLokalSandi('cleared_tasks', clearedTasksMap);
             renderTaskBoard();
         }
 
@@ -1303,21 +1337,18 @@
             
             const WAKTU_TENGGANG = 10 * 1000;
             const waktuSekarang = Date.now();
+            let clearedTasksMap = getLokalSandi('cleared_tasks') || {};
             
+            // Saring dan bersihkan task yang masa tenggangnya sudah kedaluwarsa sewaktu memancing
             activeTasks = activeTasks.filter(task => {
                 if (task.status === "clicked" && (waktuSekarang - task.clickTime) > WAKTU_TENGGANG) {
-                    let permanentCompleted = getLokalSandi('permanent_completed_tasks') || [];
-                    if (!permanentCompleted.includes(task.taskId)) {
-                        permanentCompleted.push(task.taskId);
-                        setLokalSandi('permanent_completed_tasks', permanentCompleted);
-                    }
+                    clearedTasksMap[task.taskId] = "permanent_done";
+                    setLokalSandi('cleared_tasks', clearedTasksMap);
                     return false; 
                 }
-                return true; 
+                return true;
             });
             
-            setLokalSandi('cleared_tasks', activeTasks);
-
             if(taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
                 renderTaskBoard();
             }
