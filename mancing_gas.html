@@ -678,7 +678,7 @@
         async function loadAllGameData() {
             try {
                 // 1. Ambil Data Catch.txt
-                const resCatch = await fetch('catch.txt');
+                const resCatch = await fetch('catch.txt', { cache: "no-store" });
                 if (resCatch.ok) {
                     const textCatch = await resCatch.text();
                     catchPool = textCatch.split('\n')
@@ -697,7 +697,7 @@
 
                 // 2. Ambil Data Task.txt
                 let taskTemplates = {};
-                const resTask = await fetch('task.txt');
+                const resTask = await fetch('task.txt', { cache: "no-store" });
                 if (resTask.ok) {
                     const textTask = await resTask.text();
                     textTask.split('\n').map(l => l.trim()).filter(l => l.length > 0).forEach(l => {
@@ -713,7 +713,7 @@
                 }
 
                 // 3. Ambil Data Cookies.txt & Deteksi Pembaruan Versi Misi
-                const resCookies = await fetch('cookies.txt');
+                const resCookies = await fetch('cookies.txt', { cache: "no-store" });
                 if (resCookies.ok) {
                     const data = await resCookies.text();
                     const lines = data.split('\n').map(l => l.trim()).filter(l => l.length > 0);
