@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemancingan Hati X BUBU</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #74b9ff, #a29bfe);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        h1 {
+            color: white;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        /* --- PAPAN SAMBUTAN UTAMA (WELCOME SCREEN) --- */
+        .welcome-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1e272e, #0a3d62);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            transition: opacity 0.5s ease;
+        }
+        .welcome-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 25px;
+            text-align: center;
+            width: 350px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 3px solid #f6b93b;
+        }
+        .welcome-box h2 { color: #0a3d62; margin-bottom: 10px; font-size: 1.8rem; }
+        .welcome-box p { color: #57606f; margin-bottom: 20px; font-weight: 500; }
+        .welcome-box input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #ced6e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .welcome-box input:focus { border-color: #ff9f43; }
+        
+        .btn-start-game {
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background-color: #2ed573;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        /* Area Game */
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            height: 65vh;
+            margin-top: 20px;
+            background: linear-gradient(to bottom, #fa983a, #f6b93b);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Langit & Dermaga */
+        .sky {
+            height: 50%;
+            background: linear-gradient(to bottom, #81ecec, #ffeaa7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- AWAN ASIMETRIS NATURAL --- */
+        .cloud-layer {
+            position: absolute;
+            width: 200%;
+            height: 50px;
+            transform-origin: left top;
+        }
+        .cloud1 {
+            top: 5px;
+            opacity: 0.35;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,80 Q90,20 180,70 T380,40 T600,80 T810,30 T1020,70 T1200,50 V120 H0 Z" fill="%23b2bec3"/></svg>') repeat-x;
+            background-size: 50% 50px;
+            animation: moveClouds 35s linear infinite;
+        }
+        .cloud2 {
+            top: 20px;
+            opacity: 0.2;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,90 Q120,40 240,80 T500,30 T750,90 T980,40 T1200,85 V120 H0 Z" fill="%23b2bec3"/></svg>') repeat-x;
+            background-size: 40% 45px;
+            animation: moveClouds 55s linear infinite;
+        }
+        @keyframes moveClouds {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+
+        /* --- CONTAINER BIRD GIF --- */
+        .bird-gif {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            z-index: 4;
+            pointer-events: none;
+            object-fit: contain;
+        }
+
+        /* Alas / Dataran */
+        .pier {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 85px;
+            height: 35px;
+            background-color: #4a4a4a;
+            border-top-right-radius: 5px;
+            z-index: 5;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.2);
+        }
+
+        /* GIF Karakter Pemancing */
+        .fisherman-gif {
+            position: absolute;
+            bottom: 25px;
+            left: 5px;
+            width: 65px;
+            height: 65px;
+            z-index: 6;
+            pointer-events: none;
+            transform: scaleX(-1);
+        }
+
+        /* Joran Pancing */
+        .rod {
+            position: absolute;
+            bottom: 45px;
+            left: 55px;
+            width: 110px;
+            height: 5px;
+            background-color: #2f3542;
+            transform-origin: bottom left;
+            transform: rotate(-35deg);
+            z-index: 12;
+            transition: transform 0.1s linear;
+        }
+
+        /* Tali Pancing */
+        .line {
+            position: absolute;
+            top: 2px;
+            left: 110px;
+            width: 1.5px;
+            height: 0px;
+            background-color: rgba(255, 255, 255, 0.8);
+            transform-origin: top left;
+            z-index: 15;
+        }
+
+        /* Pelampung */
+        .bobber {
+            position: absolute;
+            bottom: 0px;
+            left: -5px;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle at 50% 30%, #ff4757 50%, #ffffff 50%);
+            border-radius: 50%;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 16;
+        }
+
+        .rod.windup { transform: rotate(-85deg) !important; transition: transform 0.4s ease-out; }
+        .rod.cast-action { transform: rotate(-25deg) !important; transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        .bobber.bite { animation: bobberBite 0.4s infinite alternate; }
+        @keyframes bobberBite {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(12px); opacity: 0.7; }
+        }
+
+        /* --- TOTAL 6 LAYER OMBAK LAUT --- */
+        .sea {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: #0652dd;
+            z-index: 10;
+        }
+        .wave-svg {
+            position: absolute;
+            left: 0; width: 200%; height: 30px;
+            background-repeat: repeat-x;
+        }
+        .wave-top {
+            top: -15px; z-index: 11;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,120V73.71c47.79-22.2,103.59-32.17,158-28,70.36,5.37,136.33,33.31,206.8,37.5C438.64,87.57,512.34,66.33,583,47.95c69.27-18,138.3-24.88,209.4-13.08,36.15,6,69.85,17.84,104.45,29.34C989.49,95,1113,134.29,1200,77.6V120Z" fill="%230652dd"/></svg>');
+            background-size: 50% 30px;
+            animation: waveMoveLeft 4s linear infinite;
+        }
+        .wave-white-1 {
+            top: 15px; z-index: 12;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q150,0 300,30 T600,30 T900,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.35"/></svg>');
+            background-size: 40% 20px;
+            animation: waveMoveLeft 3s linear infinite;
+        }
+        .wave-white-2 {
+            top: 45px; z-index: 13;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q150,0 300,30 T600,30 T900,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.2"/></svg>');
+            background-size: 25% 15px;
+            animation: waveMoveLeft 5s linear infinite;
+        }
+        .wave-sub-1 {
+            top: 75px; z-index: 14;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q120,5 240,30 T480,30 T720,30 T960,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.15"/></svg>');
+            background-size: 30% 18px;
+            animation: waveMoveLeft 6s linear infinite;
+        }
+        .wave-sub-2 {
+            top: 110px; z-index: 15;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,25 Q140,0 280,25 T560,25 T840,25 T1120,25 T1200,25 V60 H0 Z" fill="%23ffffff" opacity="0.12"/></svg>');
+            background-size: 35% 16px;
+            animation: waveMoveLeft 7s linear infinite;
+        }
+        .wave-sub-3 {
+            top: 145px; z-index: 16;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q160,10 320,30 T640,30 T960,30 T1200,30 V60 H0 Z" fill="%23ffffff" opacity="0.08"/></svg>');
+            background-size: 45% 14px;
+            animation: waveMoveLeft 8s linear infinite;
+        }
+        @keyframes waveMoveLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- NAVIGASI JALUR BERJAJAR BAWAH LAUT --- */
+        .sea-menu-container {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 50;
+        }
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.25); }
+        .menu-item:active { transform: scale(0.95); }
+        .menu-icon {
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+            filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.4));
+        }
+
+        /* --- ANIMASI COUNTDOWN DETIK BESAR --- */
+        .countdown-text {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            font-size: 5.5rem;
+            font-weight: 900;
+            color: #ff3838;
+            text-shadow: 3px 3px 0px #ffffff, 0 0 20px rgba(255, 56, 56, 0.8);
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .countdown-animate {
+            animation: popFade 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popFade {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
+        /* --- TENSION STRUGGLE BAR --- */
+        .tension-container {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 22px;
+            background-color: rgba(47, 53, 66, 0.85);
+            border: 2px solid #ffffff;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 40;
+            display: none;
+        }
+        .tension-bar {
+            width: 30%;
+            height: 100%;
+            background: linear-gradient(to right, #fffa65, #ffaf40, #ff4d4d);
+            box-shadow: 0 0 12px #ff4d4d;
+            transition: width 0.1s cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        /* Efek Cipratan */
+        .splash-container {
+            position: absolute;
+            top: 50%; left: 0px; width: 1px; height: 1px; z-index: 20; display: none;
+        }
+        .drop { position: absolute; bottom: 0; left: -3px; width: 6px; height: 25px; background: linear-gradient(to top, #ffffff, #81ecec); border-radius: 50%; opacity: 0; }
+        .splash-active .drop { animation: splashAnim 0.7s ease-out forwards; }
+        .splash-active .drop:nth-child(1) { --dx: -50px; --dy: -120px; animation-delay: 0s; }
+        .splash-active .drop:nth-child(2) { --dx: -20px; --dy: -180px; animation-delay: 0.03s; }
+        .splash-active .drop:nth-child(3) { --dx: 0px; --dy: -210px; animation-delay: 0s; }
+        .splash-active .drop:nth-child(4) { --dx: 20px; --dy: -180px; animation-delay: 0.03s; }
+        .splash-active .drop:nth-child(5) { --dx: 50px; --dy: -120px; animation-delay: 0s; }
+        @keyframes splashAnim {
+            0% { transform: translate(0, 0) scaleY(1.5); opacity: 1; }
+            60% { opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scaleY(0.2); opacity: 0; }
+        }
+
+        /* Power Bar UI Lemparan */
+        .power-container {
+            width: 80%; max-width: 300px; height: 20px; background-color: #2f3542; border-radius: 10px; margin-top: 15px; overflow: hidden; border: 2px solid white; display: none;
+        }
+        .power-bar { width: 0%; height: 100%; background: linear-gradient(to right, #ffeaa7, #ff7675, #d63031); transition: width 0.05s linear; }
+
+        .btn-action {
+            margin-top: 15px; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #2ed573; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10;
+        }
+        .btn-action:disabled { background-color: #a4b0be; cursor: not-allowed; }
+        
+        .status-text { color: white; margin-top: 10px; font-weight: bold; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+
+        /* Pop-up Modal Hasil Tangkapan */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background-color: white; padding: 35px 30px; border-radius: 20px; text-align: center; width: 340px; transform: scale(0.7); transition: transform 0.3s ease; display: flex; flex-direction: column; align-items: center;
+        }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        .modal-box h2 { margin-bottom: 10px; font-size: 1.8rem; }
+        .modal-box .catch-name { font-size: 1.5rem; font-weight: bold; color: #2f3542; margin-bottom: 8px; }
+        
+        /* HIGHLIGHT BOX UNTUK KOMENTAR IKAN */
+        .comment-highlight {
+            background-color: #e0e0e0;
+            color: #000000;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: inline-block;
+            width: 100%;
+        }
+        .btn-close { width: 100%; padding: 12px; background-color: #1e90ff; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+
+        /* --- PAPAN TEMPLATE PANEL OVERLAY (HISTORY & TASK) --- */
+        .task-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .task-overlay.show { opacity: 1; pointer-events: auto; }
+        .task-box {
+            background-color: #ffffff;
+            width: 360px;
+            max-height: 80vh;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f1f2f6;
+            padding-bottom: 10px;
+        }
+        .task-header h3 { font-size: 1.4rem; color: #2f3542; }
+        .btn-close-task {
+            background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #a4b0be;
+        }
+        .task-list-container {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 5px;
+        }
+        
+        /* Elemen Tiap Item Misi / History */
+        .task-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .task-item-title { font-weight: bold; font-size: 1.1rem; color: #2f3542; margin-bottom: 8px; }
+        .task-requirements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 1rem;
+            color: #57606f;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .btn-task-claim {
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .btn-task-claim.disabled { background-color: #ced6e0; color: #a4b0be; cursor: not-allowed; }
+        .btn-task-claim.ready { background-color: #ff9f43; color: white; }
+        .btn-task-claim.get-link { background-color: #2ed573; color: white; }
+        .task-divider { border: 0; height: 1px; background: #e2e8f0; margin: 15px 0; }
+        .control-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            z-index: 10;
+        }
+        .footer-text {
+            color: #000000;         /* Mengatur warna teks menjadi hitam */
+            font-weight: lighter;   /* Membuat teks menjadi tipis */
+            font-size: 0.7rem;      /* Mengatur ukuran teks */
+            margin-top: 10px;       /* Memberi jarak aman dari tombol di atasnya */
+            margin-bottom: 10px;    /* Memberi jarak dari batas paling bawah layar browser */
+            text-align: center;     /* Memastikan teks berada tepat di tengah */
+            opacity: 0.6;           /* Mengatur transparansi teks */
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2024/11/03/audio_b8a304356c.mp3" loop autoplay></audio>
+    
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-box">
+            <h2>Selamat datang di<br>Pemancingan Hati 🎣</h2>
+            <p>Masukkan kode rahasia untuk memulai:</p>
+            <input type="password" id="codeInputField" placeholder="Ketik Kode Di Sini..." maxlength="12">
+            <button class="btn-start-game" id="btnStartGame">MULAI GAME</button>
+        </div>
+    </div>
+
+    <h1>Mancing Bersama Bubu 🎣</h1>
+    
+    <div class="game-container" id="gameContainer">
+        <div class="countdown-text" id="countdownText">5</div>
+        <div class="tension-container" id="tensionContainer">
+            <div class="tension-bar" id="tensionBar"></div>
+        </div>
+
+        <div class="sky" id="skyArea">
+            <div class="cloud-layer cloud1"></div>
+            <div class="cloud-layer cloud2"></div>
+            <div class="pier"></div>
+            <img class="fisherman-gif" src="https://media.tenor.com/NT3q-SrjV6EAAAAi/mimibubu.gif" alt="Pemancing">
+            <div class="rod" id="rod">
+                <div class="line" id="line">
+                    <div class="bobber" id="bobber"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sea">
+            <div class="wave-svg wave-top"></div>
+            <div class="wave-svg wave-white-1"></div>
+            <div class="wave-svg wave-white-2"></div>
+            <div class="wave-svg wave-sub-1"></div>
+            <div class="wave-svg wave-sub-2"></div>
+            <div class="wave-svg wave-sub-3"></div>
+
+            <!-- MENU BERJAJAR DI BAWAH LAUT -->
+            <div class="sea-menu-container">
+                <div class="menu-item" id="menuHistory">
+                    <div class="menu-icon">🕸️</div>
+                    <span>History</span>
+                </div>
+                <div class="menu-item" id="menuTask">
+                    <div class="menu-icon">📋</div>
+                    <span>Task</span>
+                </div>
+                <div class="menu-item" id="menuSound">
+                    <div class="menu-icon" id="soundIcon">🔊</div>
+                    <span>Sound</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="splash-container" id="splashContainer">
+            <div class="drop"></div><div class="drop"></div><div class="drop"></div><div class="drop"></div><div class="drop"></div>
+        </div>
+    </div>
+
+    <div class="power-container" id="powerContainer">
+        <div class="power-bar" id="powerBar"></div>
+    </div>
+
+    <div class="status-text" id="statusText">Tahan tombol untuk mengisi tenaga lemparan!</div>
+    <div class="control-area">
+        <button class="btn-action" id="btnAction">LEMPAR UMPAN</button>
+        <div class="footer-text">t.me/sampaikanhati</div>
+    </div>
+    
+    <!-- Modal Hasil Tangkapan Utama -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h2 id="modalTitle">Hasil Tangkapan</h2>
+            <div class="catch-name" id="modalResult">-</div>
+            <div class="comment-highlight" id="modalComment" style="display: none;">-</div>
+            <button class="btn-close" id="btnClose">Mancing Lagi</button>
+        </div>
+    </div>
+
+    <!-- Papan Overlay Panel Gabungan (Task & History) -->
+    <div class="task-overlay" id="taskOverlay">
+        <div class="task-box">
+            <div class="task-header">
+                <h3 id="panelTitle">Daftar Task Aktif</h3>
+                <button class="btn-close-task" id="btnCloseTask">&times;</button>
+            </div>
+            <div class="task-list-container" id="taskListContainer"></div>
+        </div>
+    </div>
+
+    
+    <script>
+        // --- DATA UTAMA GAME ---
+        let validCode = "2026"; 
+        let activeTasks = [];  
+        let catchPool = [];    
+        let inventory = {};    
+        let totalCatchHistory = {};    
+
+
+        // --- MESIN ENKRIPSI RAHASIA (3 LAPIS BASE64 & STRING REVERSAL) ---
+        function kunciSandi(teks) {
+            if (!teks) return "";
+            let lapis1 = btoa(unescape(encodeURIComponent(teks)));
+            let balikTeks = lapis1.split("").reverse().join("");
+            return btoa(balikTeks).replace(/=/g, "X");
+        }
+
+        function bukaSandi(teksSandi) {
+            try {
+                if (!teksSandi) return null;
+                let lapis2 = atob(teksSandi);
+                let lapis1 = lapis2.split("").reverse().join("");
+                return decodeURIComponent(escape(atob(lapis1)));
+            } catch (e) {
+                return null; 
+            }
+        }
+
+        function setLokalSandi(keyAsli, valueObj) {
+            const keyGaib = kunciSandi(keyAsli);
+            const valueGaib = kunciSandi(JSON.stringify(valueObj));
+            localStorage.setItem(keyGaib, valueGaib);
+        }
+
+        function getLokalSandi(keyAsli) {
+            const keyGaib = kunciSandi(keyAsli);
+            const dataSandi = localStorage.getItem(keyGaib);
+            if (!dataSandi) return null;
+            const hasilDekripsi = bukaSandi(dataSandi);
+            if (hasilDekripsi === null) return "CORRUPT";
+            return JSON.parse(hasilDekripsi);
+        }
+
+        // Load data menggunakan sistem Brankas Dekripsi
+        const invLokal = getLokalSandi('fishing_inventory');
+        if (invLokal && invLokal !== "CORRUPT") inventory = invLokal;
+
+        const histLokal = getLokalSandi('total_catch_history');
+        if (histLokal && histLokal !== "CORRUPT") totalCatchHistory = histLokal;
+
+        let gameState = "idle"; // idle, charging, fishing, pulling, miniGame
+        let throwPower = 0;
+        let chargeDirection = 1;
+        let powerInterval;
+        let fishInterval;
+        let fishTimer = 0;
+        let countdownValue = 3;
+        let countdownInterval;
+
+        // Mini Game Pulling Variables
+        let fishPosition = 50; 
+        let barPosition = 40;  
+        let barSize = 20;      
+        let tension = 0;       
+        let fishSpeed = 1.5;   
+        let fishDirection = 1; 
+        let pullInterval;
+        let rolledFish = null;
+
+        // --- ELEMEN DOM ---
+        const welcomeOverlay = document.getElementById('welcomeOverlay');
+        const pinInput = document.getElementById('pinInput');
+        const btnLogin = document.getElementById('btnLogin');
+        const loginError = document.getElementById('loginError');
+
+        const gameContainer = document.getElementById('gameContainer');
+        const btnAction = document.getElementById('btnAction');
+        const statusText = document.getElementById('statusText');
+        const powerBarContainer = document.getElementById('powerBarContainer');
+        const powerBar = document.getElementById('powerBar');
+        const waterArea = document.getElementById('waterArea');
+        const line = document.getElementById('line');
+        const bobber = document.getElementById('bobber');
+        const rod = document.getElementById('rod');
+        const countdownText = document.getElementById('countdownText');
+
+        // Mini Game DOM
+        const tensionContainer = document.getElementById('tensionContainer');
+        const tensionFill = document.getElementById('tensionFill');
+        const miniGameContainer = document.getElementById('miniGameContainer');
+        const miniGameFish = document.getElementById('miniGameFish');
+        const miniGameBar = document.getElementById('miniGameBar');
+
+        // Overlay & Modals DOM
+        const taskOverlay = document.getElementById('taskOverlay');
+        const panelTitle = document.getElementById('panelTitle');
+        const taskListContainer = document.getElementById('taskListContainer');
+        const historyListContainer = document.getElementById('historyListContainer');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalFishIcon = document.getElementById('modalFishIcon');
+
+        // --- SISTEM LOGIN ---
+        btnLogin.addEventListener('click', () => {
+            if (pinInput.value === validCode) {
+                welcomeOverlay.style.display = 'none';
+                gameContainer.style.display = 'block';
+                loadAllGameData();
+            } else {
+                loginError.style.display = 'block';
+                pinInput.value = "";
+            }
+        });
+
+        pinInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btnLogin.click();
+        });
+
+        // --- AMBIL DATA DARI SERVER (REALTIME & SECURE) ---
+        async function loadAllGameData() {
+            try {
+                const [resCatch, resTask, resCookies] = await Promise.all([
+                    fetch('catch.txt?v=' + Date.now()),
+                    fetch('task.txt?v=' + Date.now()),
+                    fetch('cookies.txt?v=' + Date.now())
+                ]);
+
+                // 1. Proses Data Catch Pool
+                if (resCatch.ok) {
+                    const textCatch = await resCatch.text();
+                    catchPool = textCatch.split('\n').map(l => l.trim()).filter(l => l.length > 0).map(l => {
+                        const [item, comment, pct] = l.split('-');
+                        const fullItemName = item.trim();
+                        if (totalCatchHistory[fullItemName] === undefined) {
+                            totalCatchHistory[fullItemName] = 0;
+                        }
+                        return { item: fullItemName, comment: comment.trim(), pct: parseFloat(pct) || 0 };
+                    });
+                    setLokalSandi('total_catch_history', totalCatchHistory);
+                }
+
+                // 2. Proses Data Kamus Syarat Misi (task.txt)
+                let taskTemplates = {};
+                if (resTask.ok) {
+                    const textTask = await resTask.text();
+                    textTask.split('\n').map(l => l.trim()).filter(l => l.length > 0).forEach(l => {
+                        const [id, reqStr] = l.split('-');
+                        if(id && reqStr) {
+                            const items = reqStr.split(';').map(i => {
+                                const [icon, qty] = i.split('x');
+                                return { icon: icon.trim(), needed: parseInt(qty) || 0 };
+                            });
+                            taskTemplates[id.trim()] = items;
+                        }
+                    });
+                }
+
+                // 3. Proses Data Cookies & Sinkronisasi Fleksibel
+                if (resCookies.ok) {
+                    const data = await resCookies.text();
+                    const lines = data.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    if (lines.length > 0) validCode = lines[0]; // Baris 1: Kode login
+                    
+                    if (lines.length > 1) {
+                        const serverVersion = lines[1]; // Baris 2: Versi Server
+                        const savedVersion = getLokalSandi('last_cookies_version');
+
+                        // RESET INVENTORY HANYA JIKA BARIS KE-2 BERUBAH
+                        if (serverVersion !== savedVersion) {
+                            inventory = {}; 
+                            setLokalSandi('fishing_inventory', inventory);
+                            setLokalSandi('cleared_tasks', {}); 
+                            setLokalSandi('last_cookies_version', serverVersion);
+                            console.log("⚠️ Versi Cookies Berubah! Inventory di-reset.");
+                        }
+
+                        let clearedTasksStatus = getLokalSandi('cleared_tasks') || {};
+                        if (clearedTasksStatus === "CORRUPT") clearedTasksStatus = {};
+
+                        activeTasks = [];
+                        let taskCounter = 1;
+
+                        for (let i = 2; i < lines.length; i++) {
+                            const separatorIndex = lines[i].lastIndexOf('-');
+                            if (separatorIndex !== -1) {
+                                const link = lines[i].substring(0, separatorIndex).trim();
+                                const taskId = lines[i].substring(separatorIndex + 1).trim();
+
+                                if (link && taskId && taskTemplates[taskId]) {
+                                    if (clearedTasksStatus[taskId] === "clicked") {
+                                        continue;
+                                    }
+
+                                    activeTasks.push({
+                                        displayId: String(taskCounter++).padStart(2, '0'),
+                                        taskId: taskId,
+                                        link: link,
+                                        requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])),
+                                        status: clearedTasksStatus[taskId] || "progress"
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                console.log("Sistem Konten Berhasil Dimuat secara Terenkripsi.");
+            } catch (err) {
+                console.error("Gagal membaca struktur file pendukung.", err);
+            }
+        }
+
+        // --- LOGIKA GAME PANCINGAN ---
+        function toggleTaskBoard() {
+            if (taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
+                taskOverlay.classList.remove('show');
+            } else {
+                panelTitle.innerText = "Daftar Task Aktif";
+                taskListContainer.style.display = "block";
+                historyListContainer.style.display = "none";
+                renderTaskBoard();
+                taskOverlay.classList.add('show');
+            }
+        }
+
+        function toggleHistoryBoard() {
+            if (taskOverlay.classList.contains('show') && panelTitle.innerText === "History Tangkapan") {
+                taskOverlay.classList.remove('show');
+            } else {
+                panelTitle.innerText = "History Tangkapan";
+                taskListContainer.style.display = "none";
+                historyListContainer.style.display = "block";
+                renderHistoryBoard();
+                taskOverlay.classList.add('show');
+            }
+        }
+
+        function closeOverlay() {
+            taskOverlay.classList.remove('show');
+        }
+
+        function extractIcon(str) {
+            if (!str) return "";
+            const hurufArray = Array.from(str.trim());
+            const indeksSpasi = hurufArray.indexOf(" ");
+            if (indeksSpasi !== -1) {
+                return hurufArray.slice(0, indeksSpasi).join("");
+            }
+            return hurufArray[0] || "";
+        }
+
+        function renderTaskBoard() {
+            taskListContainer.innerHTML = "";
+            if (activeTasks.length === 0) {
+                taskListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Semua task selesai! 🎉</p>";
+                return;
+            }
+
+            activeTasks.forEach((task, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('task-item');
+
+                const title = document.createElement('div');
+                title.classList.add('task-item-title');
+                title.innerText = `Task ${task.displayId}`;
+                itemDiv.appendChild(title);
+
+                if (task.status === "progress") {
+                    const reqsDiv = document.createElement('div');
+                    reqsDiv.classList.add('task-requirements');
+                    
+                    let componentsMet = true;
+
+                    if(getLokalSandi('fishing_inventory') === "CORRUPT") {
+                        inventory = {};
+                        setLokalSandi('fishing_inventory', inventory);
+                    }
+
+                    task.requirements.forEach(req => {
+                        const currentQty = inventory[req.icon] || 0;
+                        if (currentQty < req.needed) componentsMet = false;
+                        
+                        const reqSpan = document.createElement('span');
+                        reqSpan.innerText = `${req.icon} ${currentQty}/${req.needed}`;
+                        reqsDiv.appendChild(reqSpan);
+                    });
+                    itemDiv.appendChild(reqsDiv);
+
+                    const btnClaim = document.createElement('button');
+                    btnClaim.classList.add('btn-task-claim');
+                    if (componentsMet) {
+                        btnClaim.classList.add('ready');
+                        btnClaim.innerText = "Claim";
+                        btnClaim.onclick = () => claimTaskRequirements(index);
+                    } else {
+                        btnClaim.classList.add('disabled');
+                        btnClaim.innerText = "Claim";
+                        btnClaim.disabled = true;
+                    }
+                    itemDiv.appendChild(btnClaim);
+
+                } else if (task.status === "claimed") {
+                    const btnGetLink = document.createElement('button');
+                    btnGetLink.classList.add('btn-task-claim', 'get-link');
+                    btnGetLink.innerText = "Ambil Link Misi"; 
+                    btnGetLink.onclick = () => openTaskLink(index);
+                    itemDiv.appendChild(btnGetLink);
+                }
+                taskListContainer.appendChild(itemDiv);
+            });
+        }
+
+        function claimTaskRequirements(index) {
+            const task = activeTasks[index];
+            task.requirements.forEach(req => {
+                inventory[req.icon] = (inventory[req.icon] || 0) - req.needed;
+                if (inventory[req.icon] < 0) inventory[req.icon] = 0;
+            });
+            
+            task.status = "claimed";
+            
+            let clearedTasksStatus = getLokalSandi('cleared_tasks') || {};
+            if(clearedTasksStatus === "CORRUPT") clearedTasksStatus = {};
+            clearedTasksStatus[task.taskId] = "claimed";
+            
+            setLokalSandi('fishing_inventory', inventory);
+            setLokalSandi('cleared_tasks', clearedTasksStatus);
+            renderTaskBoard();
+        }
+
+        function openTaskLink(index) {
+            const task = activeTasks[index];
+            window.open(task.link, '_blank');
+
+            let clearedTasksStatus = getLokalSandi('cleared_tasks') || {};
+            if(clearedTasksStatus === "CORRUPT") clearedTasksStatus = {};
+            clearedTasksStatus[task.taskId] = "clicked"; 
+            
+            setLokalSandi('cleared_tasks', clearedTasksStatus);
+            
+            activeTasks.splice(index, 1);
+            renderTaskBoard();
+        }
+
+        function renderHistoryBoard() {
+            historyListContainer.innerHTML = "";
+            let hasHistory = false;
+
+            if(getLokalSandi('total_catch_history') === "CORRUPT") {
+                totalCatchHistory = {};
+                setLokalSandi('total_catch_history', totalCatchHistory);
+            }
+
+            for (const [key, value] of Object.entries(totalCatchHistory)) {
+                if (value > 0) {
+                    hasHistory = true;
+                    const histItem = document.createElement('div');
+                    histItem.classList.add('history-item');
+                    histItem.innerHTML = `<span>${key}</span><span class="badge">${value} ekor</span>`;
+                    historyListContainer.appendChild(histItem);
+                }
+            }
+
+            if (!hasHistory) {
+                historyListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Belum ada tangkapan tercatat. 🎣</p>";
+            }
+        }
+
+        // --- SISTEM MEKANIKAL PANCING ---
+        btnAction.addEventListener('mousedown', startCharging);
+        btnAction.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startCharging();
+        });
+
+        window.addEventListener('mouseup', stopCharging);
+        window.addEventListener('touchend', stopCharging);
+
+        function startCharging() {
+            if (gameState !== "idle") return;
+            gameState = "charging";
+            throwPower = 0;
+            chargeDirection = 1;
+            powerBarContainer.style.display = "block";
+            statusText.innerText = "Mengisi tenaga...";
+
+            powerInterval = setInterval(() => {
+                throwPower += 2 * chargeDirection;
+                if (throwPower >= 100) { throwPower = 100; chargeDirection = -1; }
+                if (throwPower <= 0) { throwPower = 0; chargeDirection = 1; }
+                powerBar.style.width = throwPower + "%";
+            }, 15);
+        }
+
+        function stopCharging() {
+            if (gameState !== "charging") return;
+            clearInterval(powerInterval);
+            gameState = "fishing";
+            btnAction.disabled = true;
+            btnAction.innerText = "MENUNGGU IKAN...";
+            statusText.innerText = "Umpan dilempar! Menunggu ikan mendekat...";
+
+            rod.classList.add('cast');
+            bobber.style.display = "block";
+            const travelDistance = 150 + (throwPower * 2);
+            bobber.style.bottom = travelDistance + "px";
+
+            line.style.height = travelDistance + "px";
+            line.style.transform = "rotate(0deg)";
+
+            const randomWaitTime = Math.floor(Math.random() * 4000) + 2000;
+            fishTimer = 0;
+            fishInterval = setInterval(() => {
+                fishTimer += 100;
+                if (fishTimer >= randomWaitTime) {
+                    clearInterval(fishInterval);
+                    triggerFishBite();
+                }
+            }, 100);
+        }
+
+        function triggerFishBite() {
+            gameState = "bite";
+            statusText.innerText = "IKAN MENYANTAP UMPAN! TARIK SEKARANG!!";
+            btnAction.disabled = false;
+            btnAction.innerText = "TARIK!!!";
+            btnAction.style.background = "linear-gradient(to right, #ff4757, #ff6b81)";
+            bobber.classList.add('bite-animate');
+
+            countdownValue = 3;
+            countdownText.innerText = countdownValue;
+            countdownText.classList.add('countdown-animate');
+
+            countdownInterval = setInterval(() => {
+                countdownValue--;
+                if (countdownValue > 0) {
+                    countdownText.innerText = countdownValue;
+                } else {
+                    clearInterval(countdownInterval);
+                    fishEscaped();
+                }
+            }, 1000);
+
+            btnAction.onmousedown = (e) => {
+                e.stopPropagation();
+                initiatePullingMiniGame();
+            };
+            btnAction.ontouchstart = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                initiatePullingMiniGame();
+            };
+        }
+
+        function fishEscaped() {
+            clearInterval(countdownInterval);
+            bobber.classList.remove('bite-animate');
+            btnAction.style.background = "";
+            showModal("YAHH.. LEPAS!", "Ikannya kabur karena kamu telat menarik umpan. 😢", "💨");
+            resetGame();
+        }
+
+        function initiatePullingMiniGame() {
+            clearInterval(countdownInterval);
+            bobber.classList.remove('bite-animate');
+            btnAction.style.background = "";
+            
+            // Pilih ikan dari pool secara acak berdasarkan persentase hoki
+            if (catchPool.length === 0) {
+                showModal("Eror Pool", "File catch.txt kosong atau tidak valid.", "❌");
+                resetGame();
+                return;
+            }
+
+            const totalWeight = catchPool.reduce((acc, curr) => acc + curr.pct, 0);
+            let roll = Math.random() * totalWeight;
+            rolledFish = catchPool[0];
+
+            for (let f of catchPool) {
+                roll -= f.pct;
+                if (roll <= 0) {
+                    rolledFish = f;
+                    break;
+                }
+            }
+
+            gameState = "miniGame";
+            statusText.innerText = "Tahan tombol untuk menjaga bar hijau tetap membungkus ikan!";
+            btnAction.innerText = "TAHAN BAR";
+
+            tensionContainer.style.display = "block";
+            miniGameContainer.style.display = "block";
+
+            fishPosition = 50;
+            barPosition = 40;
+            tension = 0;
+            fishSpeed = 1.2 + (Math.random() * 1.5);
+            fishDirection = Math.random() > 0.5 ? 1 : -1;
+
+            let buttonIsPressed = false;
+            btnAction.onmousedown = () => { buttonIsPressed = true; };
+            btnAction.ontouchstart = (e) => { e.preventDefault(); buttonIsPressed = true; };
+            window.onmouseup = () => { buttonIsPressed = false; };
+            window.ontouchend = () => { buttonIsPressed = false; };
+
+            pullInterval = setInterval(() => {
+                // Pergerakan AI Ikan otomatis
+                fishPosition += fishSpeed * fishDirection;
+                if (fishPosition >= 92) { fishPosition = 92; fishDirection = -1; }
+                if (fishPosition <= 2) { fishPosition = 2; fishDirection = 1; }
+                if (Math.random() < 0.07) { fishDirection *= -1; fishSpeed = 1.0 + (Math.random() * 1.8); }
+
+                // Pergerakan Bar Hijau Player
+                if (buttonIsPressed) {
+                    barPosition += 2.2; 
+                } else {
+                    barPosition -= 1.8; 
+                }
+
+                if (barPosition > (100 - barSize)) barPosition = 100 - barSize;
+                if (barPosition < 0) barPosition = 0;
+
+                miniGameFish.style.bottom = fishPosition + "%";
+                miniGameBar.style.bottom = barPosition + "%";
+
+                // Deteksi apakah ikan berada di dalam dekapan bar hijau
+                const fishMid = fishPosition + 3;
+                if (fishMid >= barPosition && fishMid <= (barPosition + barSize)) {
+                    tension += 0.8; 
+                    miniGameBar.style.background = "rgba(46, 213, 115, 0.6)";
+                } else {
+                    tension -= 0.6; 
+                    miniGameBar.style.background = "rgba(255, 71, 87, 0.5)";
+                }
+
+                if (tension < 0) tension = 0;
+                if (tension > 100) tension = 100;
+
+                tensionFill.style.width = tension + "%";
+
+                if (tension >= 100) {
+                    clearInterval(pullInterval);
+                    successPulling();
+                }
+
+                // Batas waktu lelah mancing (Jika bar lepas terlalu lama dan tension 0, lepas)
+                if (Math.random() < 0.002 && tension <= 0) {
+                    clearInterval(pullInterval);
+                    clearInterval(fishInterval);
+                    showModal("SENAR PUTUS!", "Ikan melawan terlalu kuat hingga senarmu putus!", "💥");
+                    resetGame();
+                }
+            }, 25);
+        }
+
+        function successPulling() {
+            miniGameContainer.style.display = "none";
+            
+            const matchedIcon = extractIcon(rolledFish.item);
+            
+            if(getLokalSandi('fishing_inventory') === "CORRUPT") {
+                inventory = {};
+            }
+
+            inventory[matchedIcon] = (inventory[matchedIcon] || 0) + 1;
+            setLokalSandi('fishing_inventory', inventory);
+
+            if (totalCatchHistory[rolledFish.item] !== undefined) {
+                totalCatchHistory[rolledFish.item] += 1;
+            } else {
+                totalCatchHistory[rolledFish.item] = 1;
+            }
+            setLokalSandi('total_catch_history', totalCatchHistory);
+
+            showModal("BERHASIL STRIIKKE! 🎉", rolledFish.comment, matchedIcon);
+            resetGame();
+        }
+
+        function showModal(title, msg, icon) {
+            modalTitle.innerText = title;
+            modalMessage.innerText = msg;
+            modalFishIcon.innerText = icon;
+            modalOverlay.classList.add('show');
+        }
+
+        function closeModalMessage() {
+            modalOverlay.classList.remove('show');
+        }
+
+        function resetGame() {
+            gameState = "idle";
+            btnAction.innerText = "LEMPAR UMPAN";
+            btnAction.disabled = false;
+            statusText.innerText = "Tahan tombol untuk mengisi tenaga lemparan!";
+            powerBar.style.width = "0%";
+            line.style.height = "0px"; 
+            line.style.transform = "rotate(0deg)";
+            bobber.style.display = "none";
+            rod.className = "rod"; 
+            countdownText.classList.remove('countdown-animate');
+            tensionContainer.style.display = "none";
+            miniGameContainer.style.display = "none";
+
+            btnAction.onmousedown = startCharging;
+            btnAction.ontouchstart = (e) => { e.preventDefault(); startCharging(); };
+            window.onmouseup = stopCharging;
+            window.ontouchend = stopCharging;
+
+            if(taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
+                renderTaskBoard();
+            }
+        }
+    </script>
+
+</body>
+</html>
