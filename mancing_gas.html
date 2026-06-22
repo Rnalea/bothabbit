@@ -674,10 +674,18 @@
             } catch(e){}
         }
 
-        // --- SISTEM PEMBACAAN FILE PENDUKUNG (TXT) ---
+// --- SISTEM PEMBACAAN FILE PENDUKUNG (TXT) ---
         async function loadAllGameData() {
             try {
-                // 1. Ambil Data Catch.txt
+                // 1. Ambil data lokal terenkripsi yang sudah ada di browser pemain
+                if (getLokalSandi('fishing_inventory')) {
+                    inventory = getLokalSandi('fishing_inventory');
+                }
+                if (getLokalSandi('total_catch_history')) {
+                    totalCatchHistory = getLokalSandi('total_catch_history');
+                }
+
+                // 2. Ambil Data Catch.txt (Selalu yang terbaru)
                 const resCatch = await fetch('catch.txt', { cache: "no-store" });
                 if (resCatch.ok) {
                     const textCatch = await resCatch.text();
@@ -695,7 +703,7 @@
                     setLokalSandi('total_catch_history', totalCatchHistory);
                 }
 
-                // 2. Ambil Data Task.txt
+                // 3. Ambil Data Task.txt
                 let taskTemplates = {};
                 const resTask = await fetch('task.txt', { cache: "no-store" });
                 if (resTask.ok) {
@@ -712,7 +720,7 @@
                     });
                 }
 
-                // 3. Ambil Data Cookies.txt & Deteksi Pembaruan Versi Misi
+                // 4. Ambil Data Cookies.txt & Deteksi Perubahan Versi Misi di Baris Kedua
                 const resCookies = await fetch('cookies.txt', { cache: "no-store" });
                 if (resCookies.ok) {
                     const data = await resCookies.text();
@@ -721,32 +729,46 @@
                     if (lines.length > 0) validCode = lines[0]; // Baris 1: Kode Login
                     
                     if (lines.length > 1) {
-                        const currentCookiesVersion = lines[1]; 
+                        const currentCookiesVersion = lines[1]; // Baris 2: Versi Misi
+                        
+                        // Membaca versi lama menggunakan pembungkus kunciSandi/bukaSandi bawaanmu
                         const lastSavedVersion = localStorage.getItem(kunciSandi('last_cookies_version')) ? bukaSandi(localStorage.getItem(kunciSandi('last_cookies_version'))) : null;
 
-                        // JIKA VERSI BERBEDA (KAMU HABIS COMMIT COOKIES BARU) -> RESET TASK DAN INVENTORY
+                        // JIKA BARIS KEDUA COOKIES BERUBAH -> RESET TOTAL DATA
                         if (currentCookiesVersion !== lastSavedVersion) {
                             localStorage.removeItem(kunciSandi('cleared_tasks'));
                             localStorage.removeItem(kunciSandi('fishing_inventory'));
+                            localStorage.removeItem(kunciSandi('permanent_completed_tasks')); // Reset daftar hitam task selesai
                             inventory = {}; 
+                            activeTasks = [];
                             localStorage.setItem(kunciSandi('last_cookies_version'), kunciSandi(currentCookiesVersion));
-                            console.log("⚠️ Deteksi Commit Baru! Progres task di-reset ke versi: " + currentCookiesVersion);
+                            console.log("⚠️ Deteksi Perubahan Versi! Data di-reset ke versi: " + currentCookiesVersion);
                         } else {
+                            // JIKA VERSINYA SAMA -> BUKA DATA PROGRESS AMAN
                             if (getLokalSandi('cleared_tasks')) {
                                 activeTasks = getLokalSandi('cleared_tasks');
                             }
                         }
 
+                        // Ambil data daftar hitam ID task yang sudah selesai permanen
+                        let permanentCompleted = getLokalSandi('permanent_completed_tasks') || [];
+
+                        // Jika activeTasks kosong (belum main atau baru direset), buat task dari cookies.txt
                         if (activeTasks.length === 0) {
                             let taskCounter = 1;
                             for (let i = 2; i < lines.length; i++) {
                                 const separatorIndex = lines[i].lastIndexOf('-');
-    
                                 if (separatorIndex !== -1) {
                                     const link = lines[i].substring(0, separatorIndex).trim();
                                     const taskId = lines[i].substring(separatorIndex + 1).trim();
 
                                     if (link && taskId) {
+                                        // CEK: Jika ID task ini sudah selesai permanen, jangan dimasukkan lagi ke papan task
+                                        if (permanentCompleted.includes(taskId)) {
+                                            taskCounter++; // Tetap tambah counter agar urutan Display ID konsisten
+                                            continue;
+                                        }
+
                                         if (taskTemplates[taskId]) {
                                             activeTasks.push({
                                                 displayId: String(taskCounter++).padStart(2, '0'),
@@ -755,17 +777,24 @@
                                                 requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])), 
                                                 status: "progress" 
                                             });
-                                        } else {
-                                            console.warn(`⚠️ ID Task "${taskId}" dari cookies.txt tidak ditemukan di task.txt`);
                                         }
                                     }
                                 }
                             }
                             setLokalSandi('cleared_tasks', activeTasks);
+                        } else {
+                            // JIKA REFRESH BIASA & KAMU MENGUBAH SYARAT DI TASK.TXT, 
+                            // Update requirements secara dinamis tanpa merusak status task yang sedang dikerjakan
+                            activeTasks.forEach(task => {
+                                if (task.status === "progress" && taskTemplates[task.taskId]) {
+                                    task.requirements = JSON.parse(JSON.stringify(taskTemplates[task.taskId]));
+                                }
+                            });
+                            setLokalSandi('cleared_tasks', activeTasks);
                         }
                     }
                 }
-                console.log("Sistem Konten Berhasil Dimuat.", { activeTasks, catchPool });
+                console.log("Sistem Konten Berhasil Dimuat Terenkripsi.", { activeTasks, catchPool });
             } catch (err) {
                 console.error("Gagal membaca struktur file pendukung.", err);
             }
@@ -837,14 +866,27 @@
             const WAKTU_TENGGANG = 10 * 1000; 
             const waktuSekarang = Date.now();
 
+            // Saring otomatis: Masukkan ke daftar hitam permanen sebelum dihapus dari activeTasks
             activeTasks = activeTasks.filter(task => {
                 if (task.status === "clicked" && (waktuSekarang - task.clickTime) > WAKTU_TENGGANG) {
-                    return false; 
+                    
+                    // AMAN: Menggunakan getLokalSandi untuk mengambil data terenkripsi
+                    let permanentCompleted = getLokalSandi('permanent_completed_tasks') || [];
+                    
+                    if (!permanentCompleted.includes(task.taskId)) {
+                        permanentCompleted.push(task.taskId);
+                        
+                        // AMAN: Menggunakan setLokalSandi untuk menyimpan data terenkripsi
+                        setLokalSandi('permanent_completed_tasks', permanentCompleted);
+                    }
+                    return false; // Buang dari activeTasks (Hapus dari tampilan papan)
                 }
                 return true; 
             });
             
+            // Simpan status activeTasks ter-update ke brankas sandi lokal
             setLokalSandi('cleared_tasks', activeTasks);
+
             if (activeTasks.length === 0) {
                 taskListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Semua task selesai! 🎉</p>";
                 return;
@@ -1277,12 +1319,25 @@
             const WAKTU_TENGGANG = 10 * 1000;
             const waktuSekarang = Date.now();
             
+            // Saring otomatis: Masukkan ke daftar hitam permanen sebelum dihapus dari activeTasks
             activeTasks = activeTasks.filter(task => {
                 if (task.status === "clicked" && (waktuSekarang - task.clickTime) > WAKTU_TENGGANG) {
-                    return false; 
+                    
+                    // AMAN: Menggunakan getLokalSandi untuk mengambil data terenkripsi
+                    let permanentCompleted = getLokalSandi('permanent_completed_tasks') || [];
+                    
+                    if (!permanentCompleted.includes(task.taskId)) {
+                        permanentCompleted.push(task.taskId);
+                        
+                        // AMAN: Menggunakan setLokalSandi untuk menyimpan kembali data terenkripsi
+                        setLokalSandi('permanent_completed_tasks', permanentCompleted);
+                    }
+                    return false; // Buang dari activeTasks (Hapus dari tampilan papan)
                 }
-                return true;
+                return true; 
             });
+            
+            // Simpan status activeTasks yang baru ke brankas sandi lokal
             setLokalSandi('cleared_tasks', activeTasks);
 
             if(taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
