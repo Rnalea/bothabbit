@@ -51,18 +51,36 @@
         }
         .welcome-box h2 { color: #0a3d62; margin-bottom: 10px; font-size: 1.8rem; }
         .welcome-box p { color: #57606f; margin-bottom: 20px; font-weight: 500; }
+        
+        /* Container Input Password & Mata */
+        .input-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+        }
         .welcome-box input {
             width: 100%;
-            padding: 12px;
+            padding: 12px 45px 12px 12px; /* Beri jarak kanan untuk ikon mata */
             font-size: 1.2rem;
             text-align: center;
             border: 2px solid #ced6e0;
             border-radius: 10px;
-            margin-bottom: 20px;
             outline: none;
             transition: border 0.3s;
         }
         .welcome-box input:focus { border-color: #ff9f43; }
+        
+        /* Tombol Mata Toggle Password */
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.2rem;
+            user-select: none;
+            z-index: 10;
+        }
         
         .btn-start-game {
             display: none;
@@ -504,13 +522,13 @@
             z-index: 10;
         }
         .footer-text {
-            color: #000000;         
-            font-weight: lighter;   
-            font-size: 0.7rem;      
-            margin-top: 10px;       
-            margin-bottom: 10px;    
-            text-align: center;     
-            opacity: 0.6;           
+            color: #000000;         /* Mengatur warna teks menjadi hitam */
+            font-weight: lighter;   /* Membuat teks menjadi tipis */
+            font-size: 0.7rem;      /* Mengatur ukuran teks */
+            margin-top: 10px;       /* Memberi jarak aman dari tombol di atasnya */
+            margin-bottom: 10px;    /* Memberi jarak dari batas paling bawah layar browser */
+            text-align: center;     /* Memastikan teks berada tepat di tengah */
+            opacity: 0.6;           /* Mengatur transparansi teks */
         }
     </style>
 </head>
@@ -521,7 +539,10 @@
         <div class="welcome-box">
             <h2>Selamat datang di<br>Pemancingan Hati 🎣</h2>
             <p>Masukkan kode rahasia untuk memulai:</p>
-            <input type="password" id="codeInputField" placeholder="Ketik Kode Di Sini..." maxlength="12">
+            <div class="input-container">
+                <input type="password" id="codeInputField" placeholder="Ketik Kode Di Sini..." maxlength="12">
+                <span class="toggle-password" id="togglePasswordIcon">👁️</span>
+            </div>
             <button class="btn-start-game" id="btnStartGame">MULAI GAME</button>
         </div>
     </div>
@@ -605,72 +626,24 @@
     </div>
 
     <script>
-        // =========================================================================
-        // ENGINE ENKRIPSI & DEKRIPSI 3 LAPIS (XOR -> REVERSE -> BASE64)
-        // =========================================================================
-        const _K = 42; 
-        
-        function secureEnc(str) {
-            if (!str) return "";
-            let res = "";
-            for (let i = 0; i < str.length; i++) {
-                res += String.fromCharCode(str.charCodeAt(i) ^ _K);
-            }
-            res = res.split("").reverse().join("");
-            return btoa(unescape(encodeURIComponent(res)));
-        }
-
-        function secureDec(str) {
-            if (!str) return "";
-            try {
-                let res = decodeURIComponent(escape(atob(str)));
-                res = res.split("").reverse().join("");
-                let orig = "";
-                for (let i = 0; i < res.length; i++) {
-                    orig += String.fromCharCode(res.charCodeAt(i) ^ _K);
-                }
-                return orig;
-            } catch (e) {
-                return "";
-            }
-        }
-
-        function loadLocalData(key, isObj = true) {
-            let encVal = localStorage.getItem(key);
-            if (!encVal) return isObj ? {} : "";
-            let decVal = secureDec(encVal);
-            if (isObj) {
-                try { return JSON.parse(decVal); } catch (e) { return {}; }
-            }
-            return decVal;
-        }
-
-        function saveLocalData(key, val, isObj = true) {
-            let strVal = isObj ? JSON.stringify(val) : String(val);
-            localStorage.setItem(key, secureEnc(strVal));
-        }
-
-        // --- DEKLARASI GLOBAL VARIABLE UTAMA ---
         let validCode = "2026"; 
         let activeTasks = [];  
         let catchPool = [];    
         let inventory = {};    
         let totalCatchHistory = {};    
 
-        // Load data awal dari local storage yang terenkripsi
-        inventory = loadLocalData('fishing_inventory', true);
-        totalCatchHistory = loadLocalData('total_catch_history', true);
-        let savedClearedTasks = loadLocalData('cleared_tasks', true);
-        if (Array.isArray(savedClearedTasks)) {
-            activeTasks = savedClearedTasks;
-        } else {
-            activeTasks = [];
+        if (localStorage.getItem('fishing_inventory')) {
+            inventory = JSON.parse(localStorage.getItem('fishing_inventory'));
+        }
+      
+        if (localStorage.getItem('total_catch_history')) {
+            totalCatchHistory = JSON.parse(localStorage.getItem('total_catch_history'));
         }
 
-        // --- SISTEM PEMBACAAN FILE PENDUKUNG REALTIME & SINKRONISASI UPDATE ---
+        // --- SISTEM PEMBACAAN FILE PENDUKUNG (TXT) ---
         async function loadAllGameData() {
             try {
-                // 1. Ambil Data catch.txt
+                // 1. Ambil Data Catch.txt
                 const resCatch = await fetch('catch.txt');
                 if (resCatch.ok) {
                     const textCatch = await resCatch.text();
@@ -680,16 +653,15 @@
                         .map(l => {
                             const [item, comment, pct] = l.split('-');
                             const fullItemName = item.trim();
-                            // Pastikan item baru terdaftar di riwayat tanpa mereset count lamanya
                             if (totalCatchHistory[fullItemName] === undefined) {
                                 totalCatchHistory[fullItemName] = 0;
                             }
                             return { item: fullItemName, comment: comment.trim(), pct: parseFloat(pct) || 0 };
                         });
-                    saveLocalData('total_catch_history', totalCatchHistory, true);
+                    localStorage.setItem('total_catch_history', JSON.stringify(totalCatchHistory));
                 }
 
-                // 2. Ambil Data task.txt
+                // 2. Ambil Data Task.txt
                 let taskTemplates = {};
                 const resTask = await fetch('task.txt');
                 if (resTask.ok) {
@@ -706,7 +678,7 @@
                     });
                 }
 
-                // 3. Ambil Data cookies.txt & Deteksi Pembaruan Versi Misi
+                // 3. Ambil Data Cookies.txt & Deteksi Pembaruan Versi Misi
                 const resCookies = await fetch('cookies.txt');
                 if (resCookies.ok) {
                     const data = await resCookies.text();
@@ -716,54 +688,46 @@
                     
                     if (lines.length > 1) {
                         const currentCookiesVersion = lines[1]; 
-                        const lastSavedVersion = loadLocalData('last_cookies_version', false);
+                        const lastSavedVersion = localStorage.getItem('last_cookies_version');
 
-                        // JIKA VERSI BERBEDA -> CORES / COOKIES BARU DI-COMMIT -> RESET INVENTORY & TASK PROGRESS
                         if (currentCookiesVersion !== lastSavedVersion) {
                             localStorage.removeItem('cleared_tasks');
                             localStorage.removeItem('fishing_inventory');
                             inventory = {}; 
-                            activeTasks = [];
-                            saveLocalData('last_cookies_version', currentCookiesVersion, false);
-                            console.log("⚠️ Deteksi Commit Baru! Progres task & inventory di-reset ke versi: " + currentCookiesVersion);
-                        }
-
-                        // PARSING / SINKRONISASI AKTIF (Selalu update properties task atau bangun baru jika kosong)
-                        let parsedTasksFromTxt = [];
-                        let taskCounter = 1;
-
-                        for (let i = 2; i < lines.length; i++) {
-                            const separatorIndex = lines[i].lastIndexOf('-');
-                            if (separatorIndex !== -1) {
-                                const link = lines[i].substring(0, separatorIndex).trim();
-                                const taskId = lines[i].substring(separatorIndex + 1).trim();
-
-                                if (link && taskId && taskTemplates[taskId]) {
-                                    // Cek apakah task ini sebelumnya sudah ada di local storage
-                                    let existingTask = activeTasks.find(t => t.taskId === taskId && t.displayId === String(taskCounter).padStart(2, '0'));
-                                    
-                                    if (existingTask) {
-                                        // Update properties link & requirements terbaru dari file secara realtime
-                                        existingTask.link = link;
-                                        existingTask.requirements = JSON.parse(JSON.stringify(taskTemplates[taskId]));
-                                        parsedTasksFromTxt.push(existingTask);
-                                    } else {
-                                        // Jika benar-benar task baru, buat object status progress baru
-                                        parsedTasksFromTxt.push({
-                                            displayId: String(taskCounter).padStart(2, '0'),
-                                            taskId: taskId,
-                                            link: link,
-                                            requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])), 
-                                            status: "progress" 
-                                        });
-                                    }
-                                    taskCounter++;
-                                }
+                            localStorage.setItem('last_cookies_version', currentCookiesVersion);
+                            console.log("⚠️ Deteksi Commit Baru! Progres task di-reset ke versi: " + currentCookiesVersion);
+                        } else {
+                            if (localStorage.getItem('cleared_tasks')) {
+                                activeTasks = JSON.parse(localStorage.getItem('cleared_tasks'));
                             }
                         }
-                        
-                        activeTasks = parsedTasksFromTxt;
-                        saveLocalData('cleared_tasks', activeTasks, true);
+
+                        if (activeTasks.length === 0) {
+                            let taskCounter = 1;
+                            for (let i = 2; i < lines.length; i++) {
+                                const separatorIndex = lines[i].lastIndexOf('-');
+    
+                                if (separatorIndex !== -1) {
+                                    const link = lines[i].substring(0, separatorIndex).trim();
+                                    const taskId = lines[i].substring(separatorIndex + 1).trim();
+
+                                    if (link && taskId) {
+                                        if (taskTemplates[taskId]) {
+                                            activeTasks.push({
+                                                displayId: String(taskCounter++).padStart(2, '0'),
+                                                taskId: taskId,
+                                                link: link,
+                                                requirements: JSON.parse(JSON.stringify(taskTemplates[taskId])), 
+                                                status: "progress" 
+                                            });
+                                        } else {
+                                            console.warn(`⚠️ ID Task "${taskId}" dari cookies.txt tidak ditemukan di task.txt`);
+                                        }
+                                    }
+                                }
+                            }
+                            localStorage.setItem('cleared_tasks', JSON.stringify(activeTasks));
+                        }
                     }
                 }
                 console.log("Sistem Konten Berhasil Dimuat.", { activeTasks, catchPool });
@@ -777,6 +741,7 @@
         // --- MANAJEMEN EVENT DOM INTERFASE ---
         const welcomeOverlay = document.getElementById('welcomeOverlay');
         const codeInputField = document.getElementById('codeInputField');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
         const btnStartGame = document.getElementById('btnStartGame');
         
         const menuHistory = document.getElementById('menuHistory');
@@ -789,6 +754,17 @@
         const btnCloseTask = document.getElementById('btnCloseTask');
         const panelTitle = document.getElementById('panelTitle');
         const taskListContainer = document.getElementById('taskListContainer');
+
+        // Fungsi Toggle Ikon Mata (Lihat Sandi / Bulat-bulat)
+        togglePasswordIcon.addEventListener('click', () => {
+            if (codeInputField.type === "password") {
+                codeInputField.type = "text";
+                togglePasswordIcon.innerText = "🙈";
+            } else {
+                codeInputField.type = "password";
+                togglePasswordIcon.innerText = "👁️";
+            }
+        });
 
         codeInputField.addEventListener('input', () => {
             if (codeInputField.value === validCode) {
@@ -845,7 +821,7 @@
                 return true; 
             });
             
-            saveLocalData('cleared_tasks', activeTasks, true);
+            localStorage.setItem('cleared_tasks', JSON.stringify(activeTasks));
             if (activeTasks.length === 0) {
                 taskListContainer.innerHTML = "<p style='text-align:center;color:#a4b0be;margin-top:20px;'>Semua task selesai! 🎉</p>";
                 return;
@@ -958,19 +934,17 @@
             });
             
             task.status = "claimed";
-            saveLocalData('fishing_inventory', inventory, true);
-            saveLocalData('cleared_tasks', activeTasks, true);
+            localStorage.setItem('fishing_inventory', JSON.stringify(inventory));
+            localStorage.setItem('cleared_tasks', JSON.stringify(activeTasks));
             renderTaskBoard();
         }
 
         function openTaskLink(index) {
             const task = activeTasks[index];
             window.open(task.link, '_blank');
-
             task.status = "clicked"; 
             task.clickTime = Date.now(); 
-            
-            saveLocalData('cleared_tasks', activeTasks, true);
+            localStorage.setItem('cleared_tasks', JSON.stringify(activeTasks));
             renderTaskBoard();
         }
 
@@ -1204,7 +1178,7 @@
                         const matchedIcon = extractIcon(rolledFish.item);
                         if(matchedIcon) {
                             inventory[matchedIcon] = (inventory[matchedIcon] || 0) + 1;
-                            saveLocalData('fishing_inventory', inventory, true);
+                            localStorage.setItem('fishing_inventory', JSON.stringify(inventory));    
                         }
 
                         if (totalCatchHistory[rolledFish.item] !== undefined) {
@@ -1212,7 +1186,7 @@
                         } else {
                             totalCatchHistory[rolledFish.item] = 1;
                         }
-                        saveLocalData('total_catch_history', totalCatchHistory, true);
+                        localStorage.setItem('total_catch_history', JSON.stringify(totalCatchHistory));
 
                         showResult(rolledFish);
                     } else {
@@ -1284,7 +1258,7 @@
                 }
                 return true;
             });
-            saveLocalData('cleared_tasks', activeTasks, true);
+            localStorage.setItem('cleared_tasks', JSON.stringify(activeTasks));
 
             if(taskOverlay.classList.contains('show') && panelTitle.innerText === "Daftar Task Aktif") {
                 renderTaskBoard();
